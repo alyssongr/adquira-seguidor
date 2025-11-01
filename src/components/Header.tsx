@@ -18,11 +18,10 @@ const Header = () => {
       path: "#",
       hasDropdown: true,
       subItems: [
-        { name: "Seguidores", path: "/servicos/seguidores" },
-        { name: "Curtidas", path: "/servicos/curtidas" },
-        { name: "Comentários", path: "/servicos/comentarios" },
-        { name: "Visualizações", path: "/servicos/visualizacoes" },
-        { name: "Pacotes Combo", path: "/servicos/combo" },
+        { name: "Instagram", path: "/servicos/instagram" },
+        { name: "TikTok", path: "/servicos/tiktok" },
+        { name: "YouTube", path: "/servicos/youtube" },
+        { name: "Facebook", path: "/servicos/facebook" },
       ]
     },
     { name: "Como Funciona", path: "/como-funciona" },

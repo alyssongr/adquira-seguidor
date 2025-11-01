@@ -9,6 +9,10 @@ import ComoFunciona from "./pages/ComoFunciona";
 import Contato from "./pages/Contato";
 import Suporte from "./pages/Suporte";
 import NotFound from "./pages/NotFound";
+import Instagram from "./pages/servicos/Instagram";
+import TikTok from "./pages/servicos/TikTok";
+import YouTube from "./pages/servicos/YouTube";
+import Facebook from "./pages/servicos/Facebook";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +28,10 @@ const App = () => (
           <Route path="/como-funciona" element={<ComoFunciona />} />
           <Route path="/contato" element={<Contato />} />
           <Route path="/suporte" element={<Suporte />} />
+          <Route path="/servicos/instagram" element={<Instagram />} />
+          <Route path="/servicos/tiktok" element={<TikTok />} />
+          <Route path="/servicos/youtube" element={<YouTube />} />
+          <Route path="/servicos/facebook" element={<Facebook />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
