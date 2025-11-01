@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Facebook as FacebookIcon } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -11,16 +11,126 @@ import { Button } from "@/components/ui/button";
 const PRICES = {
   seguidores: 0.09,
   curtidas: 0.04,
+  visualizacoes: 0.025,
 };
 
-const Facebook = () => {
-  const [seguidoresQty, setSeguidoresQty] = useState("");
-  const [curtidasQty, setCurtidasQty] = useState("");
-  const [pageUrl, setPageUrl] = useState("");
-  const [postUrl, setPostUrl] = useState("");
+const SERVICES = [
+  {
+    id: "seguidores",
+    name: "Seguidores Autênticos",
+    description: "Aumente seus seguidores na página com perfis relevantes",
+    gradient: "from-blue-600 to-indigo-600",
+    accentBorder: "border-blue-500",
+    accentShadow: "shadow-[0_20px_45px_-12px_rgba(59,130,246,0.45)]",
+    summaryGradient: "from-blue-500/10 to-indigo-500/10",
+    summaryBorder: "border-blue-500/20",
+    priceText: "text-blue-600 dark:text-blue-400",
+    unitLabel: "seguidores",
+    icon: FacebookIcon,
+    inputs: [
+      {
+        id: "pageUrl",
+        label: "URL da página",
+        placeholder: "https://facebook.com/suapagina",
+        type: "text",
+      },
+      {
+        id: "quantity",
+        label: "Quantidade de seguidores",
+        placeholder: "1000",
+        type: "number",
+        isQuantity: true,
+      },
+    ],
+  },
+  {
+    id: "curtidas",
+    name: "Curtidas Engajadas",
+    description: "Potencialize o alcance das suas publicações",
+    gradient: "from-indigo-600 to-purple-600",
+    accentBorder: "border-indigo-500",
+    accentShadow: "shadow-[0_20px_45px_-12px_rgba(99,102,241,0.45)]",
+    summaryGradient: "from-indigo-500/10 to-purple-500/10",
+    summaryBorder: "border-indigo-500/20",
+    priceText: "text-indigo-600 dark:text-indigo-400",
+    unitLabel: "curtidas",
+    icon: FacebookIcon,
+    inputs: [
+      {
+        id: "postUrl",
+        label: "URL da publicação",
+        placeholder: "https://facebook.com/...",
+        type: "text",
+      },
+      {
+        id: "quantity",
+        label: "Quantidade de curtidas",
+        placeholder: "500",
+        type: "number",
+        isQuantity: true,
+      },
+    ],
+  },
+  {
+    id: "visualizacoes",
+    name: "Visualizações Rápidas",
+    description: "Mais visualizações para vídeos, Reels e transmissões",
+    gradient: "from-purple-600 to-blue-500",
+    accentBorder: "border-purple-500",
+    accentShadow: "shadow-[0_20px_45px_-12px_rgba(168,85,247,0.45)]",
+    summaryGradient: "from-purple-500/10 to-blue-500/10",
+    summaryBorder: "border-purple-500/20",
+    priceText: "text-purple-600 dark:text-purple-400",
+    unitLabel: "visualizações",
+    icon: FacebookIcon,
+    inputs: [
+      {
+        id: "contentUrl",
+        label: "URL do vídeo",
+        placeholder: "https://facebook.com/watch/...",
+        type: "text",
+      },
+      {
+        id: "quantity",
+        label: "Quantidade de visualizações",
+        placeholder: "5000",
+        type: "number",
+        isQuantity: true,
+      },
+    ],
+  },
+];
 
-  const seguidoresTotal = Number(seguidoresQty) * PRICES.seguidores;
-  const curtidasTotal = Number(curtidasQty) * PRICES.curtidas;
+type ServiceField = (typeof SERVICES)[number]["inputs"][number];
+
+const Facebook = () => {
+  const [selectedService, setSelectedService] = useState(SERVICES[0].id);
+  const [formData, setFormData] = useState(() =>
+    SERVICES.reduce<Record<string, Record<string, string>>>((acc, service) => {
+      acc[service.id] = service.inputs.reduce<Record<string, string>>((fields, field) => {
+        fields[field.id] = "";
+        return fields;
+      }, {});
+      return acc;
+    }, {}),
+  );
+
+  const service = useMemo(() => SERVICES.find((item) => item.id === selectedService) ?? SERVICES[0], [selectedService]);
+  const ActiveIcon = service.icon;
+
+  const handleChange = (serviceId: string, field: ServiceField, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [serviceId]: {
+        ...prev[serviceId],
+        [field.id]: value,
+      },
+    }));
+  };
+
+  const quantityField = service.inputs.find((input) => input.isQuantity);
+  const quantityValue = quantityField ? Number(formData[service.id][quantityField.id] || 0) : 0;
+  const total = quantityField ? quantityValue * PRICES[service.id as keyof typeof PRICES] : 0;
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-indigo-900/20">
@@ -44,115 +154,115 @@ const Facebook = () => {
             </p>
           </div>
 
-          {/* Services Grid */}
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Facebook Seguidores */}
-            <Card className="border-2 hover:border-blue-500 transition-all hover:shadow-glow">
+          <div className="max-w-5xl mx-auto space-y-8">
+            <Card className="border-2 border-border/40 bg-background/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-2xl flex items-center gap-2">
-                  <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                    <FacebookIcon className="w-6 h-6 text-white" />
-                  </div>
-                  Facebook Seguidores
-                </CardTitle>
+                <CardTitle className="text-2xl">Escolha o tipo de serviço</CardTitle>
                 <CardDescription>
-                  Aumente seus seguidores na sua página
+                  Organize sua campanha selecionando o serviço ideal para sua página
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="facebook-page">URL da página</Label>
-                  <Input
-                    id="facebook-page"
-                    placeholder="https://facebook.com/suapagina"
-                    value={pageUrl}
-                    onChange={(e) => setPageUrl(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="facebook-seguidores">Quantidade de seguidores</Label>
-                  <Input
-                    id="facebook-seguidores"
-                    type="number"
-                    placeholder="1000"
-                    value={seguidoresQty}
-                    onChange={(e) => setSeguidoresQty(e.target.value)}
-                  />
-                </div>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {SERVICES.map((serviceOption) => {
+                    const OptionIcon = serviceOption.icon;
+                    const isSelected = serviceOption.id === service.id;
 
-                {seguidoresQty && Number(seguidoresQty) > 0 && (
-                  <div className="p-4 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-lg border-2 border-blue-500/20 animate-fade-in">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">Total:</span>
-                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        R$ {seguidoresTotal.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {seguidoresQty} seguidores × R$ {PRICES.seguidores.toFixed(2)}
-                    </div>
-                  </div>
-                )}
-
-                <Button className="w-full" variant="hero" size="lg">
-                  Comprar Agora
-                </Button>
+                    return (
+                      <button
+                        key={serviceOption.id}
+                        type="button"
+                        onClick={() => setSelectedService(serviceOption.id)}
+                        className={`group relative flex h-full flex-col gap-3 rounded-2xl border-2 p-5 text-left transition-all duration-200 ${
+                          isSelected
+                            ? `${serviceOption.accentBorder} ${serviceOption.accentShadow} bg-background`
+                            : "border-transparent bg-muted/40 hover:border-border/60 hover:bg-muted/60 hover:shadow-lg"
+                        }`}
+                      >
+                        <span
+                          className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-tr ${serviceOption.gradient} text-white shadow-lg shadow-black/10`}
+                        >
+                          <OptionIcon className="h-6 w-6" />
+                        </span>
+                        <div className="space-y-1">
+                          <span className="text-lg font-semibold">{serviceOption.name}</span>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {serviceOption.description}
+                          </p>
+                        </div>
+                        <div className="mt-auto flex items-center justify-between text-sm text-muted-foreground">
+                          <span>
+                            R$ {PRICES[serviceOption.id as keyof typeof PRICES].toFixed(2)} por {serviceOption.unitLabel}
+                          </span>
+                          <span
+                            className={`rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide ${
+                              isSelected
+                                ? `${serviceOption.accentBorder} bg-background`
+                                : "border-border/80 bg-background/60"
+                            }`}
+                          >
+                            Selecionar
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </CardContent>
             </Card>
 
-            {/* Facebook Curtidas */}
-            <Card className="border-2 hover:border-indigo-500 transition-all hover:shadow-glow">
+            <Card
+              className={`border-2 bg-background/90 backdrop-blur-sm transition-all duration-200 ${service.accentBorder} ${service.accentShadow}`}
+            >
               <CardHeader>
-                <CardTitle className="text-2xl flex items-center gap-2">
-                  <div className="w-10 h-10 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                    <FacebookIcon className="w-6 h-6 text-white" />
-                  </div>
-                  Facebook Curtidas
+                <CardTitle className="text-2xl flex items-center gap-3">
+                  <span
+                    className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-tr ${service.gradient} text-white shadow-lg shadow-black/10`}
+                  >
+                    <ActiveIcon className="h-6 w-6" />
+                  </span>
+                  {service.name}
                 </CardTitle>
-                <CardDescription>
-                  Mais curtidas para suas publicações
-                </CardDescription>
+                <CardDescription>{service.description}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="facebook-post">URL da publicação</Label>
-                  <Input
-                    id="facebook-post"
-                    placeholder="https://facebook.com/..."
-                    value={postUrl}
-                    onChange={(e) => setPostUrl(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="facebook-curtidas">Quantidade de curtidas</Label>
-                  <Input
-                    id="facebook-curtidas"
-                    type="number"
-                    placeholder="500"
-                    value={curtidasQty}
-                    onChange={(e) => setCurtidasQty(e.target.value)}
-                  />
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {service.inputs.map((field) => (
+                    <div key={field.id} className="space-y-2">
+                      <Label htmlFor={`${service.id}-${field.id}`}>{field.label}</Label>
+                      <Input
+                        id={`${service.id}-${field.id}`}
+                        type={field.type ?? "text"}
+                        placeholder={field.placeholder}
+                        value={formData[service.id][field.id]}
+                        onChange={(event) => handleChange(service.id, field, event.target.value)}
+                      />
+                    </div>
+                  ))}
                 </div>
 
-                {curtidasQty && Number(curtidasQty) > 0 && (
-                  <div className="p-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-lg border-2 border-indigo-500/20 animate-fade-in">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">Total:</span>
-                      <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                        R$ {curtidasTotal.toFixed(2)}
-                      </span>
+                {quantityField && quantityValue > 0 && (
+                  <div
+                    className={`rounded-xl border-2 bg-gradient-to-r p-5 animate-fade-in ${service.summaryGradient} ${service.summaryBorder}`}
+                  >
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="font-semibold">Total estimado</span>
+                      <span className={`text-3xl font-bold ${service.priceText}`}>R$ {total.toFixed(2)}</span>
                     </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {curtidasQty} curtidas × R$ {PRICES.curtidas.toFixed(2)}
-                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {quantityValue} {service.unitLabel} × R$ {PRICES[service.id as keyof typeof PRICES].toFixed(2)}
+                    </p>
                   </div>
                 )}
 
-                <Button className="w-full" variant="hero" size="lg">
-                  Comprar Agora
-                </Button>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Todas as estratégias passam por validação manual para manter a segurança da sua página.
+                  </p>
+                  <Button className="w-full sm:w-auto" variant="hero" size="lg">
+                    Comprar Agora
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
