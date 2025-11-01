@@ -29,7 +29,6 @@ const Header = () => {
     { name: "Planos e Preços", path: "/planos" },
     { name: "Depoimentos", path: "/depoimentos" },
     { name: "API & Revenda", path: "/api-revenda" },
-    { name: "Afiliados", path: "/afiliados" },
     { name: "Blog", path: "/blog" },
     { name: "Suporte", path: "/suporte" },
     { name: "Contato", path: "/contato" },
