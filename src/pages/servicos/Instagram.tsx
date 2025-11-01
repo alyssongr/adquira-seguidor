@@ -11,7 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
-const MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-4467312379858377-092023-115af0a889144e87bc864c520140e1ef-514189289";
+const MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-4490289128523870-103123-bcba371c4b63b801558dc0ab37559d69-514189289";
 const SMM_API_KEY = "7370bc15c4240eef061c03a6901741d8";
 const SMM_LIKES_SERVICE_ID = "8952";
 
