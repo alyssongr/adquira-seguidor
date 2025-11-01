@@ -11,8 +11,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
-const MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-4490289128523870-103123-bcba371c4b63b801558dc0ab37559d69-514189289";
-const SMM_API_KEY = "7370bc15c4240eef061c03a6901741d8";
 const SMM_LIKES_SERVICE_ID = "8952";
 
 const PRICES = {
@@ -209,40 +207,43 @@ const Instagram = () => {
     setOrderId(null);
 
     try {
-      const response = await fetch("https://api.mercadopago.com/v1/payments", {
+      const response = await fetch("/api/payments/create", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           transaction_amount: Number(total.toFixed(2)),
           description: `Compra de ${quantityValue} curtidas no Instagram`,
-          payment_method_id: "pix",
           payer: {
             email: "cliente@example.com",
             first_name: "Cliente",
             last_name: "Instagram",
           },
+          metadata: {
+            serviceId: service.id,
+            link: postUrl,
+            quantity: quantityValue,
+          },
         }),
       });
 
+      const data = await response.json().catch(() => null);
+
       if (!response.ok) {
-        throw new Error("Não foi possível gerar o pagamento. Tente novamente em instantes.");
+        const errorMessage = data?.error ?? "Não foi possível gerar o pagamento. Tente novamente em instantes.";
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json();
-      const transactionData = data?.point_of_interaction?.transaction_data;
-
-      if (!transactionData?.qr_code || !transactionData?.qr_code_base64) {
+      if (!data?.qr_code || !data?.qr_code_base64) {
         throw new Error("A resposta do Mercado Pago não contém as informações do PIX.");
       }
 
       setPaymentInfo({
         id: String(data.id),
-        qrCode: transactionData.qr_code,
-        qrCodeBase64: transactionData.qr_code_base64,
-        amount: Number(data.transaction_amount ?? total),
+        qrCode: data.qr_code,
+        qrCodeBase64: data.qr_code_base64,
+        amount: Number(data.amount ?? total),
       });
       setPaymentStatus("pending");
       setPaymentId(String(data.id));
@@ -272,17 +273,13 @@ const Instagram = () => {
 
     const intervalId = window.setInterval(async () => {
       try {
-        const statusResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-          headers: {
-            Authorization: `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
-          },
-        });
+        const statusResponse = await fetch(`/api/payments/status?id=${paymentId}`);
+        const statusData = await statusResponse.json().catch(() => null);
 
         if (!statusResponse.ok) {
-          throw new Error("Não foi possível verificar o status do pagamento.");
+          throw new Error(statusData?.error ?? "Não foi possível verificar o status do pagamento.");
         }
 
-        const statusData = await statusResponse.json();
         const status = statusData?.status as string | undefined;
 
         if (!status) {
@@ -320,27 +317,23 @@ const Instagram = () => {
       setOrderRequested(true);
 
       try {
-        const params = new URLSearchParams({
-          key: SMM_API_KEY,
-          action: "add",
-          service: SMM_LIKES_SERVICE_ID,
-          link: purchaseContext.link,
-          quantity: String(purchaseContext.quantity),
-        });
-
-        const orderResponse = await fetch("https://smmcost.com/api/v2", {
+        const orderResponse = await fetch("/api/smm/order", {
           method: "POST",
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Type": "application/json",
           },
-          body: params.toString(),
+          body: JSON.stringify({
+            service: SMM_LIKES_SERVICE_ID,
+            link: purchaseContext.link,
+            quantity: purchaseContext.quantity,
+          }),
         });
 
-        if (!orderResponse.ok) {
-          throw new Error("Não foi possível registrar seu pedido no painel de serviços.");
-        }
+        const orderData = await orderResponse.json().catch(() => null);
 
-        const orderData = await orderResponse.json();
+        if (!orderResponse.ok) {
+          throw new Error(orderData?.error ?? "Não foi possível registrar seu pedido no painel de serviços.");
+        }
 
         if (!orderData?.order) {
           throw new Error("O painel retornou uma resposta inesperada. Entre em contato com o suporte.");
