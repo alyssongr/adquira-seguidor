@@ -28,8 +28,6 @@ const Header = () => {
     { name: "Como Funciona", path: "/como-funciona" },
     { name: "Planos e Preços", path: "/planos" },
     { name: "Depoimentos", path: "/depoimentos" },
-    { name: "API & Revenda", path: "/api-revenda" },
-    { name: "Blog", path: "/blog" },
     { name: "Suporte", path: "/suporte" },
     { name: "Contato", path: "/contato" },
   ];
