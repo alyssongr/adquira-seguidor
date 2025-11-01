@@ -56,6 +56,7 @@ const Footer = () => {
               <li><Link to="/servicos/comentarios" className="text-sm text-secondary-foreground/80 hover:text-primary transition-colors">Comentários</Link></li>
               <li><Link to="/servicos/visualizacoes" className="text-sm text-secondary-foreground/80 hover:text-primary transition-colors">Visualizações</Link></li>
               <li><Link to="/servicos/combo" className="text-sm text-secondary-foreground/80 hover:text-primary transition-colors">Pacotes Combo</Link></li>
+              <li><Link to="/servicos/linkedin" className="text-sm text-secondary-foreground/80 hover:text-primary transition-colors">LinkedIn</Link></li>
             </ul>
           </div>
 

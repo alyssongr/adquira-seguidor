@@ -22,6 +22,7 @@ const Header = () => {
         { name: "TikTok", path: "/servicos/tiktok" },
         { name: "YouTube", path: "/servicos/youtube" },
         { name: "Facebook", path: "/servicos/facebook" },
+        { name: "LinkedIn", path: "/servicos/linkedin" },
       ]
     },
     { name: "Como Funciona", path: "/como-funciona" },
