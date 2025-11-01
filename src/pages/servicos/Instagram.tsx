@@ -11,8 +11,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
-const MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-4490289128523870-103123-bcba371c4b63b801558dc0ab37559d69-514189289";
-const SMM_API_KEY = "7370bc15c4240eef061c03a6901741d8";
 const SMM_LIKES_SERVICE_ID = "8952";
 
 const PRICES = {
@@ -109,6 +107,101 @@ const SERVICES = [
 ];
 
 type ServiceField = (typeof SERVICES)[number]["inputs"][number];
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+type ParsedResponse = {
+  data: unknown;
+  rawText: string;
+};
+
+const parseResponse = async (response: Response): Promise<ParsedResponse> => {
+  const rawText = await response.text();
+  let data: unknown = null;
+
+  if (rawText) {
+    try {
+      data = JSON.parse(rawText);
+    } catch (parseError) {
+      console.warn("Não foi possível converter a resposta em JSON", parseError);
+    }
+  }
+
+  return { data, rawText };
+};
+
+const collectCauseMessages = (cause: unknown): string[] => {
+  if (!cause) {
+    return [];
+  }
+
+  const normalizeValue = (value: unknown): string | null => {
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+
+    if (isRecord(value)) {
+      const description = value.description ?? value.message ?? value.detail ?? value.code;
+
+      if (typeof description === "string" && description.trim()) {
+        return description.trim();
+      }
+    }
+
+    return null;
+  };
+
+  if (Array.isArray(cause)) {
+    return cause.map(normalizeValue).filter((value): value is string => Boolean(value));
+  }
+
+  const singleValue = normalizeValue(cause);
+
+  return singleValue ? [singleValue] : [];
+};
+
+type ErrorMessageOptions = {
+  fallback: string;
+  missingEndpointHint?: string;
+};
+
+const getErrorMessage = (
+  response: Response,
+  { data, rawText }: ParsedResponse,
+  { fallback, missingEndpointHint }: ErrorMessageOptions,
+): string => {
+  if (response.status === 404 && missingEndpointHint) {
+    return missingEndpointHint;
+  }
+
+  if (isRecord(data)) {
+    const candidates = [data.error, data.message, data.detail, data.details].filter(
+      (value): value is string => typeof value === "string" && value.trim().length > 0,
+    );
+    const causeMessages = collectCauseMessages(data.cause);
+
+    if (candidates.length > 0) {
+      const message = candidates[0].trim();
+
+      if (causeMessages.length > 0) {
+        return `${message}${message.endsWith(".") ? "" : "."} Detalhes: ${causeMessages.join("; ")}`;
+      }
+
+      return message;
+    }
+
+    if (causeMessages.length > 0) {
+      return causeMessages.join("; ");
+    }
+  }
+
+  if (rawText && rawText.trim()) {
+    return rawText.trim();
+  }
+
+  return `${fallback} (status ${response.status})`;
+};
 
 const Instagram = () => {
   const [selectedService, setSelectedService] = useState(SERVICES[0].id);
@@ -209,43 +302,61 @@ const Instagram = () => {
     setOrderId(null);
 
     try {
-      const response = await fetch("https://api.mercadopago.com/v1/payments", {
+      const response = await fetch("/api/payments/create", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           transaction_amount: Number(total.toFixed(2)),
           description: `Compra de ${quantityValue} curtidas no Instagram`,
-          payment_method_id: "pix",
           payer: {
             email: "cliente@example.com",
             first_name: "Cliente",
             last_name: "Instagram",
           },
+          metadata: {
+            serviceId: service.id,
+            link: postUrl,
+            quantity: quantityValue,
+          },
         }),
       });
 
+      const parsed = await parseResponse(response);
+
       if (!response.ok) {
-        throw new Error("Não foi possível gerar o pagamento. Tente novamente em instantes.");
+        throw new Error(
+          getErrorMessage(response, parsed, {
+            fallback: "Não foi possível gerar o pagamento. Tente novamente em instantes.",
+            missingEndpointHint:
+              "O endpoint interno /api/payments/create não foi encontrado. Certifique-se de executar o backend Next.js com as rotas configuradas.",
+          }),
+        );
       }
 
-      const data = await response.json();
-      const transactionData = data?.point_of_interaction?.transaction_data;
+      if (!isRecord(parsed.data)) {
+        throw new Error("A resposta do backend não pôde ser interpretada.");
+      }
 
-      if (!transactionData?.qr_code || !transactionData?.qr_code_base64) {
+      const qrCode = typeof parsed.data.qr_code === "string" ? parsed.data.qr_code : null;
+      const qrCodeBase64 =
+        typeof parsed.data.qr_code_base64 === "string" ? parsed.data.qr_code_base64 : null;
+      const paymentIdFromBackend = parsed.data.id;
+      const paymentAmount = parsed.data.amount;
+
+      if (!qrCode || !qrCodeBase64) {
         throw new Error("A resposta do Mercado Pago não contém as informações do PIX.");
       }
 
       setPaymentInfo({
-        id: String(data.id),
-        qrCode: transactionData.qr_code,
-        qrCodeBase64: transactionData.qr_code_base64,
-        amount: Number(data.transaction_amount ?? total),
+        id: paymentIdFromBackend ? String(paymentIdFromBackend) : crypto.randomUUID(),
+        qrCode,
+        qrCodeBase64,
+        amount: Number(typeof paymentAmount === "number" ? paymentAmount : total),
       });
       setPaymentStatus("pending");
-      setPaymentId(String(data.id));
+      setPaymentId(paymentIdFromBackend ? String(paymentIdFromBackend) : null);
       setPurchaseContext({
         serviceId: service.id,
         link: postUrl,
@@ -272,18 +383,24 @@ const Instagram = () => {
 
     const intervalId = window.setInterval(async () => {
       try {
-        const statusResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-          headers: {
-            Authorization: `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
-          },
-        });
+        const statusResponse = await fetch(`/api/payments/status?id=${paymentId}`);
+        const parsed = await parseResponse(statusResponse);
 
         if (!statusResponse.ok) {
-          throw new Error("Não foi possível verificar o status do pagamento.");
+          throw new Error(
+            getErrorMessage(statusResponse, parsed, {
+              fallback: "Não foi possível verificar o status do pagamento.",
+              missingEndpointHint:
+                "O endpoint interno /api/payments/status não foi encontrado. Confira se o backend Next.js está rodando.",
+            }),
+          );
         }
 
-        const statusData = await statusResponse.json();
-        const status = statusData?.status as string | undefined;
+        if (!isRecord(parsed.data)) {
+          return;
+        }
+
+        const status = typeof parsed.data.status === "string" ? parsed.data.status : undefined;
 
         if (!status) {
           return;
@@ -320,33 +437,39 @@ const Instagram = () => {
       setOrderRequested(true);
 
       try {
-        const params = new URLSearchParams({
-          key: SMM_API_KEY,
-          action: "add",
-          service: SMM_LIKES_SERVICE_ID,
-          link: purchaseContext.link,
-          quantity: String(purchaseContext.quantity),
-        });
-
-        const orderResponse = await fetch("https://smmcost.com/api/v2", {
+        const orderResponse = await fetch("/api/smm/order", {
           method: "POST",
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Type": "application/json",
           },
-          body: params.toString(),
+          body: JSON.stringify({
+            service: SMM_LIKES_SERVICE_ID,
+            link: purchaseContext.link,
+            quantity: purchaseContext.quantity,
+          }),
         });
 
+        const parsed = await parseResponse(orderResponse);
+
         if (!orderResponse.ok) {
-          throw new Error("Não foi possível registrar seu pedido no painel de serviços.");
+          throw new Error(
+            getErrorMessage(orderResponse, parsed, {
+              fallback: "Não foi possível registrar seu pedido no painel de serviços.",
+              missingEndpointHint:
+                "O endpoint interno /api/smm/order não respondeu. Verifique se o backend com as rotas internas está ativo.",
+            }),
+          );
         }
 
-        const orderData = await orderResponse.json();
-
-        if (!orderData?.order) {
+        if (!isRecord(parsed.data)) {
           throw new Error("O painel retornou uma resposta inesperada. Entre em contato com o suporte.");
         }
 
-        setOrderId(String(orderData.order));
+        if (!parsed.data.order) {
+          throw new Error("O painel retornou uma resposta inesperada. Entre em contato com o suporte.");
+        }
+
+        setOrderId(String(parsed.data.order));
       } catch (orderError) {
         console.error(orderError);
         setError(orderError instanceof Error ? orderError.message : "Erro ao registrar o pedido no fornecedor.");
