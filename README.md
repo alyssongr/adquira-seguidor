@@ -71,3 +71,7 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Integração com Mercado Pago
+
+- Consulte a documentação interna em [`docs/mercado-pago.md`](docs/mercado-pago.md) para revisar as credenciais de produção e as orientações completas sobre como criar e gerenciar uma aplicação de Código QR PIX no Mercado Pago.
