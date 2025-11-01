@@ -339,11 +339,13 @@ const Instagram = () => {
         throw new Error("A resposta do backend não pôde ser interpretada.");
       }
 
-      const qrCode = typeof parsed.data.qr_code === "string" ? parsed.data.qr_code : null;
+      const paymentData = parsed.data;
+
+      const qrCode = typeof paymentData.qr_code === "string" ? paymentData.qr_code : null;
       const qrCodeBase64 =
-        typeof parsed.data.qr_code_base64 === "string" ? parsed.data.qr_code_base64 : null;
-      const paymentIdFromBackend = parsed.data.id;
-      const paymentAmount = parsed.data.amount;
+        typeof paymentData.qr_code_base64 === "string" ? paymentData.qr_code_base64 : null;
+      const paymentIdFromBackend = paymentData.id;
+      const paymentAmount = paymentData.amount;
 
       if (!qrCode || !qrCodeBase64) {
         throw new Error("A resposta do Mercado Pago não contém as informações do PIX.");
@@ -400,7 +402,8 @@ const Instagram = () => {
           return;
         }
 
-        const status = typeof parsed.data.status === "string" ? parsed.data.status : undefined;
+        const statusData = parsed.data;
+        const status = typeof statusData.status === "string" ? statusData.status : undefined;
 
         if (!status) {
           return;
@@ -465,11 +468,13 @@ const Instagram = () => {
           throw new Error("O painel retornou uma resposta inesperada. Entre em contato com o suporte.");
         }
 
-        if (!parsed.data.order) {
+        const orderData = parsed.data;
+
+        if (!orderData.order) {
           throw new Error("O painel retornou uma resposta inesperada. Entre em contato com o suporte.");
         }
 
-        setOrderId(String(parsed.data.order));
+        setOrderId(String(orderData.order));
       } catch (orderError) {
         console.error(orderError);
         setError(orderError instanceof Error ? orderError.message : "Erro ao registrar o pedido no fornecedor.");
