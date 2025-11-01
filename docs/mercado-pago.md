@@ -9,7 +9,7 @@ Utilize as credenciais abaixo nas integrações em produção do Instagram Likes
 - **Client ID:** `4490289128523870`
 - **Client Secret:** `2F54pWN7tHTYwcZxXmF7bmz9GnS1Qnh8`
 
-> ⚠️ Guarde estas informações com segurança. Se necessário substituir as credenciais, atualize-as também no código da aplicação (por exemplo, em `src/pages/servicos/Instagram.tsx`).
+> ⚠️ Guarde estas informações com segurança. Caso seja necessário substituir as credenciais, atualize apenas as variáveis de ambiente do backend (`MP_ACCESS_TOKEN`) e reinicie o servidor.
 
 ## Criar uma aplicação no Mercado Pago
 
