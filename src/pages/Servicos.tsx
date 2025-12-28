@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { Instagram, Youtube, ShoppingCart, Zap, Star, TrendingUp } from "lucide-react";
+import {
+  Instagram,
+  Youtube,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+  Heart,
+  Eye,
+  MessageCircle,
+  Clock,
+  Play,
+} from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { PurchaseModal } from "@/components/services/PurchaseModal";
@@ -65,7 +76,7 @@ const services: Service[] = [
     name: "Comentários Instagram",
     description: "Comentários personalizados para suas postagens.",
     tags: ["Premium"],
-    pricePerUnit: 0.50,
+    pricePerUnit: 0.5,
     minQuantity: 10,
     maxQuantity: 500,
   },
@@ -117,7 +128,7 @@ const services: Service[] = [
     name: "Inscritos YouTube",
     description: "Aumente seus inscritos com qualidade e segurança.",
     tags: ["Mais vendido", "Premium"],
-    pricePerUnit: 0.10,
+    pricePerUnit: 0.1,
     minQuantity: 50,
     maxQuantity: 10000,
   },
@@ -147,7 +158,7 @@ const services: Service[] = [
     name: "Watch Time YouTube",
     description: "Horas de visualização para monetização.",
     tags: ["Premium", "Monetização"],
-    pricePerUnit: 2.00,
+    pricePerUnit: 2.0,
     minQuantity: 10,
     maxQuantity: 4000,
   },
@@ -165,7 +176,7 @@ const platforms = [
     name: "TikTok",
     icon: () => (
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
       </svg>
     ),
     color: "from-cyan-400 to-pink-500",
@@ -178,37 +189,37 @@ const platforms = [
   },
 ];
 
-const Servicos = () => {
-  const [selectedPlatform, setSelectedPlatform] = useState<Platform>("instagram");
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
+const platformById = {
+  instagram: platforms[0],
+  tiktok: platforms[1],
+  youtube: platforms[2],
+} as const;
 
-  const filteredServices = services.filter(
-    (service) => service.platform === selectedPlatform
-  );
-
-  const getTagStyle = (tag: string) => {
-    switch (tag.toLowerCase()) {
-      case "mais vendido":
-        return "bg-primary/20 text-primary";
-      case "popular":
-        return "bg-blue-500/20 text-blue-400";
-      case "rápido":
-      case "entrega rápida":
-        return "bg-green-500/20 text-green-400";
-      case "novo":
-        return "bg-purple-500/20 text-purple-400";
-      case "premium":
-        return "bg-amber-500/20 text-amber-400";
-      case "seguro":
-        return "bg-emerald-500/20 text-emerald-400";
-      case "instantâneo":
-        return "bg-cyan-500/20 text-cyan-400";
-      case "monetização":
-        return "bg-pink-500/20 text-pink-400";
-      default:
-        return "bg-secondary text-muted-foreground";
-    }
-  };
+const getServiceIcon = (serviceId: string) => {
+  switch (serviceId) {
+    case "ig-followers":
+    case "tt-followers":
+    case "yt-subscribers":
+      return Users;
+    case "ig-likes":
+    case "tt-likes":
+    case "yt-likes":
+      return Heart;
+    case "ig-views":
+    case "ig-story-views":
+    case "tt-views":
+    case "yt-views":
+      return Eye;
+    case "ig-comments":
+      return MessageCircle;
+    case "tt-shares":
+      return Play;
+    case "yt-watch":
+      return Clock;
+    default:
+      return ShoppingCart;
+  }
+};
 
   return (
     <Layout>

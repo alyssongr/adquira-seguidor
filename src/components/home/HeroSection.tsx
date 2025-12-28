@@ -43,8 +43,8 @@ export function HeroSection() {
 
       <div className="container mx-auto px-4 pt-28 pb-20 md:pt-36">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
-          {/* Content - Pushed to the right */}
-          <div className="text-center lg:text-left lg:pl-8 xl:pl-16 animate-slide-up order-1">
+          {/* Content */}
+          <div className="text-center lg:text-left animate-slide-up order-1">
             <div className="inline-flex items-center gap-2 bg-primary-foreground/20 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
               <Heart className="w-4 h-4 text-primary-foreground" fill="currentColor" />
               <span className="text-sm font-medium text-primary-foreground">
