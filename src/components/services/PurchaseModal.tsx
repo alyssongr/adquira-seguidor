@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { X, Minus, Plus, ArrowRight, Link as LinkIcon, Loader2 } from "lucide-react";
+import { X, Minus, Plus, ArrowRight, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PaymentModal } from "./PaymentModal";
+import { createPortal } from "react-dom";
 
 interface Service {
   id: string;
@@ -52,16 +53,20 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
     );
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-fade-in"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
+        style={{ animation: 'fadeIn 0.2s ease-out' }}
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg bg-card border border-border rounded-3xl shadow-2xl animate-scale-in overflow-hidden">
+      <div 
+        className="relative w-full max-w-lg bg-card border border-border rounded-3xl shadow-2xl overflow-hidden"
+        style={{ animation: 'scaleIn 0.3s ease-out' }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h2 className="font-display text-xl font-bold text-foreground">
@@ -174,4 +179,6 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
