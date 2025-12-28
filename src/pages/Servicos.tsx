@@ -4,15 +4,12 @@ import {
   Instagram,
   Youtube,
   ShoppingCart,
-  TrendingUp,
   Users,
   Heart,
   Eye,
   MessageCircle,
   Clock,
   Play,
-  Zap,
-  Star,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -410,21 +407,21 @@ const Servicos = () => {
                         const visual = serviceVisuals[service.id];
                         return (
                           <>
-                            <div className={`relative mb-6 overflow-hidden rounded-xl border border-border bg-gradient-to-br ${visual?.gradient ?? "from-primary/60 via-primary/40 to-foreground/40"} shadow-inner`}>
-                              <div className="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_10%_20%,white,transparent_30%),radial-gradient(circle_at_90%_10%,white,transparent_30%),radial-gradient(circle_at_50%_80%,white,transparent_40%)]" />
-                              <div className="flex items-center justify-between px-4 py-3 relative">
-                                <div className={`w-12 h-12 rounded-xl ${visual?.accent ?? "bg-primary/15"} flex items-center justify-center text-2xl`}>
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${platformColors.color} flex items-center justify-center shadow-md`}>
+                                  <platformColors.icon className="w-5 h-5 text-white" />
+                                </div>
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${visual?.accent ?? "bg-primary/15"}`}>
                                   {visual?.emoji ?? "✨"}
                                 </div>
-                                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-background/80 text-xs font-semibold text-foreground border border-border/80">
-                                  <platformColors.icon className="w-4 h-4" />
-                                  <span>{platformColors.name}</span>
+                                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                                  <ServiceIcon className="w-5 h-5 text-primary" />
                                 </div>
                               </div>
-                              <div className="px-4 pb-4 flex items-center gap-3 text-xs text-primary-foreground/80 font-medium">
-                                <ServiceIcon className="w-4 h-4" />
-                                <span>Configuração rápida e segura</span>
-                              </div>
+                              <span className="text-xs font-semibold text-muted-foreground">
+                                {platformColors.name}
+                              </span>
                             </div>
                           </>
                         );
@@ -438,17 +435,7 @@ const Servicos = () => {
                         {service.description}
                       </p>
 
-                      {/* Stats */}
-                      <div className="flex items-center gap-4 mb-6 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Zap className="w-3.5 h-3.5 text-primary" />
-                          <span>Entrega rápida</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3.5 h-3.5 text-primary" />
-                          <span>4.9/5</span>
-                        </div>
-                      </div>
+                      <div className="h-px bg-border mb-6" />
 
                       {/* CTA Button */}
                       <Button
