@@ -27,6 +27,9 @@ export function Header() {
     setIsMobileMenuOpen(false);
   }, [location]);
 
+  // Check if we're on the home page (which has yellow hero)
+  const isHomePage = location.pathname === "/";
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -39,11 +42,23 @@ export function Header() {
         <nav className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-lg bg-gradient-yellow flex items-center justify-center font-display font-bold text-primary-foreground text-xl transition-transform group-hover:scale-105">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-display font-bold text-xl transition-all ${
+              isScrolled 
+                ? "bg-gradient-to-br from-primary to-brand-yellow-dark text-primary-foreground" 
+                : isHomePage 
+                  ? "bg-primary-foreground text-primary shadow-md" 
+                  : "bg-gradient-to-br from-primary to-brand-yellow-dark text-primary-foreground"
+            } group-hover:scale-105`}>
               A
             </div>
-            <span className="font-display font-bold text-xl text-foreground hidden sm:block">
-              Adquira<span className="text-primary">Seguidor</span>
+            <span className={`font-display font-bold text-xl hidden sm:block transition-colors ${
+              isScrolled 
+                ? "text-foreground" 
+                : isHomePage 
+                  ? "text-primary-foreground" 
+                  : "text-foreground"
+            }`}>
+              Adquira<span className={`${isScrolled ? "text-primary" : isHomePage ? "text-primary-foreground/80" : "text-primary"}`}>Seguidor</span>
             </span>
           </Link>
 
@@ -53,15 +68,25 @@ export function Header() {
               <Link
                 key={link.href}
                 to={link.href}
-                className={`font-medium transition-colors duration-200 relative group ${
+                className={`font-semibold transition-colors duration-200 relative group ${
                   location.pathname === link.href
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? isScrolled 
+                      ? "text-primary" 
+                      : isHomePage 
+                        ? "text-primary-foreground" 
+                        : "text-primary"
+                    : isScrolled 
+                      ? "text-muted-foreground hover:text-foreground" 
+                      : isHomePage 
+                        ? "text-primary-foreground/80 hover:text-primary-foreground" 
+                        : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {link.label}
                 <span
-                  className={`absolute -bottom-1 left-0 h-0.5 bg-primary transition-all duration-300 ${
+                  className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                    isScrolled || !isHomePage ? "bg-primary" : "bg-primary-foreground"
+                  } ${
                     location.pathname === link.href
                       ? "w-full"
                       : "w-0 group-hover:w-full"
@@ -73,7 +98,12 @@ export function Header() {
 
           {/* CTA Button */}
           <div className="hidden md:block">
-            <Button asChild variant="cta" size="lg">
+            <Button 
+              asChild 
+              variant={isScrolled || !isHomePage ? "cta" : "hero"} 
+              size="lg"
+              className={!isScrolled && isHomePage ? "shadow-lg" : ""}
+            >
               <Link to="/servicos">Ver Serviços</Link>
             </Button>
           </div>
@@ -81,7 +111,11 @@ export function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-foreground hover:text-primary transition-colors"
+            className={`md:hidden p-2 transition-colors ${
+              isScrolled || !isHomePage
+                ? "text-foreground hover:text-primary"
+                : "text-primary-foreground hover:text-primary-foreground/80"
+            }`}
             aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -94,21 +128,27 @@ export function Header() {
             isMobileMenuOpen ? "max-h-80 pb-6" : "max-h-0"
           }`}
         >
-          <div className="flex flex-col gap-4 pt-4 border-t border-border">
+          <div className={`flex flex-col gap-4 pt-4 border-t ${
+            isScrolled || !isHomePage ? "border-border" : "border-primary-foreground/20"
+          }`}>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className={`font-medium py-2 transition-colors ${
+                className={`font-semibold py-2 transition-colors ${
                   location.pathname === link.href
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? isScrolled || !isHomePage
+                      ? "text-primary"
+                      : "text-primary-foreground"
+                    : isScrolled || !isHomePage
+                      ? "text-muted-foreground hover:text-foreground"
+                      : "text-primary-foreground/80 hover:text-primary-foreground"
                 }`}
               >
                 {link.label}
               </Link>
             ))}
-            <Button asChild variant="cta" className="mt-2">
+            <Button asChild variant={isScrolled || !isHomePage ? "cta" : "hero"} className="mt-2">
               <Link to="/servicos">Ver Serviços</Link>
             </Button>
           </div>
