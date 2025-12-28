@@ -1,239 +1,462 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, Heart, Loader2, CheckCircle, Sparkles } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import type { RefObject } from "react";
+import {
+  Instagram,
+  Youtube,
+  ShoppingCart,
+  Users,
+  Heart,
+  Eye,
+  MessageCircle,
+  Clock,
+  Play,
+  Zap,
+  Star,
+} from "lucide-react";
+import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import heroImage from "@/assets/hero-people.jpg";
+import { PurchaseModal } from "@/components/services/PurchaseModal";
 
-export function HeroSection() {
-  const [postLink, setPostLink] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+type Platform = "instagram" | "tiktok" | "youtube";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!postLink) {
-      toast.error("Cole o link da sua postagem");
-      return;
-    }
+interface Service {
+  id: string;
+  platform: Platform;
+  name: string;
+  description: string;
+  tags: string[];
+  pricePerUnit: number;
+  minQuantity: number;
+  maxQuantity: number;
+}
 
-    if (!postLink.includes("instagram.com")) {
-      toast.error("Por favor, insira um link válido do Instagram");
-      return;
-    }
+const services: Service[] = [
+  // Instagram
+  {
+    id: "ig-followers",
+    platform: "instagram",
+    name: "Seguidores Instagram",
+    description: "Aumente seu número de seguidores com perfis reais e ativos.",
+    tags: ["Mais vendido", "Entrega rápida"],
+    pricePerUnit: 0.05,
+    minQuantity: 100,
+    maxQuantity: 50000,
+  },
+  {
+    id: "ig-likes",
+    platform: "instagram",
+    name: "Curtidas Instagram",
+    description: "Curtidas para suas fotos e vídeos. Aumenta o engajamento.",
+    tags: ["Popular", "Instantâneo"],
+    pricePerUnit: 0.02,
+    minQuantity: 50,
+    maxQuantity: 10000,
+  },
+  {
+    id: "ig-views",
+    platform: "instagram",
+    name: "Visualizações Reels",
+    description: "Impulsione seus Reels com visualizações reais.",
+    tags: ["Rápido"],
+    pricePerUnit: 0.01,
+    minQuantity: 100,
+    maxQuantity: 100000,
+  },
+  {
+    id: "ig-story-views",
+    platform: "instagram",
+    name: "Visualizações Stories",
+    description: "Mais visualizações para seus Stories.",
+    tags: ["Novo"],
+    pricePerUnit: 0.01,
+    minQuantity: 100,
+    maxQuantity: 50000,
+  },
+  {
+    id: "ig-comments",
+    platform: "instagram",
+    name: "Comentários Instagram",
+    description: "Comentários personalizados para suas postagens.",
+    tags: ["Premium"],
+    pricePerUnit: 0.5,
+    minQuantity: 10,
+    maxQuantity: 500,
+  },
+  // TikTok
+  {
+    id: "tt-followers",
+    platform: "tiktok",
+    name: "Seguidores TikTok",
+    description: "Seguidores reais para seu perfil TikTok.",
+    tags: ["Mais vendido", "Seguro"],
+    pricePerUnit: 0.04,
+    minQuantity: 100,
+    maxQuantity: 50000,
+  },
+  {
+    id: "tt-likes",
+    platform: "tiktok",
+    name: "Curtidas TikTok",
+    description: "Curtidas para seus vídeos do TikTok.",
+    tags: ["Popular"],
+    pricePerUnit: 0.02,
+    minQuantity: 50,
+    maxQuantity: 20000,
+  },
+  {
+    id: "tt-views",
+    platform: "tiktok",
+    name: "Visualizações TikTok",
+    description: "Aumente as visualizações dos seus vídeos.",
+    tags: ["Rápido"],
+    pricePerUnit: 0.005,
+    minQuantity: 500,
+    maxQuantity: 500000,
+  },
+  {
+    id: "tt-shares",
+    platform: "tiktok",
+    name: "Compartilhamentos TikTok",
+    description: "Mais compartilhamentos para viralizar seus vídeos.",
+    tags: ["Novo"],
+    pricePerUnit: 0.08,
+    minQuantity: 50,
+    maxQuantity: 5000,
+  },
+  // YouTube
+  {
+    id: "yt-subscribers",
+    platform: "youtube",
+    name: "Inscritos YouTube",
+    description: "Aumente seus inscritos com qualidade e segurança.",
+    tags: ["Mais vendido", "Premium"],
+    pricePerUnit: 0.1,
+    minQuantity: 50,
+    maxQuantity: 10000,
+  },
+  {
+    id: "yt-views",
+    platform: "youtube",
+    name: "Visualizações YouTube",
+    description: "Visualizações reais para seus vídeos.",
+    tags: ["Popular"],
+    pricePerUnit: 0.02,
+    minQuantity: 100,
+    maxQuantity: 100000,
+  },
+  {
+    id: "yt-likes",
+    platform: "youtube",
+    name: "Likes YouTube",
+    description: "Curtidas para aumentar o engajamento dos vídeos.",
+    tags: ["Rápido"],
+    pricePerUnit: 0.04,
+    minQuantity: 50,
+    maxQuantity: 10000,
+  },
+  {
+    id: "yt-watch",
+    platform: "youtube",
+    name: "Watch Time YouTube",
+    description: "Horas de visualização para monetização.",
+    tags: ["Premium", "Monetização"],
+    pricePerUnit: 2.0,
+    minQuantity: 10,
+    maxQuantity: 4000,
+  },
+];
 
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsLoading(false);
-    setIsSuccess(true);
-    toast.success("100 likes enviados com sucesso!");
+// ✅ TikTok icon aceitando className (pra não quebrar)
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className ?? "w-5 h-5"}>
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+  </svg>
+);
+
+const platforms = [
+  {
+    id: "instagram" as Platform,
+    name: "Instagram",
+    icon: Instagram,
+    color: "from-pink-500 to-purple-600",
+  },
+  {
+    id: "tiktok" as Platform,
+    name: "TikTok",
+    icon: TikTokIcon,
+    color: "from-cyan-400 to-pink-500",
+  },
+  {
+    id: "youtube" as Platform,
+    name: "YouTube",
+    icon: Youtube,
+    color: "from-red-500 to-red-600",
+  },
+];
+
+const platformById = {
+  instagram: platforms[0],
+  tiktok: platforms[1],
+  youtube: platforms[2],
+} as const;
+
+const getServiceIcon = (serviceId: string) => {
+  switch (serviceId) {
+    case "ig-followers":
+    case "tt-followers":
+    case "yt-subscribers":
+      return Users;
+    case "ig-likes":
+    case "tt-likes":
+    case "yt-likes":
+      return Heart;
+    case "ig-views":
+    case "ig-story-views":
+    case "tt-views":
+    case "yt-views":
+      return Eye;
+    case "ig-comments":
+      return MessageCircle;
+    case "tt-shares":
+      return Play;
+    case "yt-watch":
+      return Clock;
+    default:
+      return ShoppingCart;
+  }
+};
+
+const serviceVisuals: Record<
+  Service["id"],
+  { gradient: string; accent: string; emoji: string }
+> = {
+  "ig-followers": {
+    gradient: "from-pink-500/80 via-purple-500/70 to-orange-400/70",
+    accent: "bg-pink-500/15",
+    emoji: "👥",
+  },
+  "ig-likes": {
+    gradient: "from-pink-500/80 via-rose-500/70 to-orange-400/70",
+    accent: "bg-rose-500/15",
+    emoji: "❤️",
+  },
+  "ig-views": {
+    gradient: "from-purple-500/80 via-indigo-500/70 to-blue-500/70",
+    accent: "bg-indigo-500/15",
+    emoji: "🎬",
+  },
+  "ig-story-views": {
+    gradient: "from-amber-400/80 via-orange-500/70 to-pink-500/70",
+    accent: "bg-amber-500/15",
+    emoji: "📱",
+  },
+  "ig-comments": {
+    gradient: "from-purple-500/80 via-pink-500/70 to-rose-500/70",
+    accent: "bg-purple-500/15",
+    emoji: "💬",
+  },
+  "tt-followers": {
+    gradient: "from-cyan-400/80 via-pink-500/70 to-purple-500/70",
+    accent: "bg-cyan-500/15",
+    emoji: "🚀",
+  },
+  "tt-likes": {
+    gradient: "from-fuchsia-500/80 via-cyan-400/70 to-rose-500/70",
+    accent: "bg-fuchsia-500/15",
+    emoji: "👍",
+  },
+  "tt-views": {
+    gradient: "from-sky-400/80 via-cyan-400/70 to-blue-500/70",
+    accent: "bg-sky-500/15",
+    emoji: "👁️",
+  },
+  "tt-shares": {
+    gradient: "from-emerald-400/80 via-cyan-400/70 to-blue-500/70",
+    accent: "bg-emerald-500/15",
+    emoji: "📢",
+  },
+  "yt-subscribers": {
+    gradient: "from-red-500/80 via-rose-500/70 to-orange-500/70",
+    accent: "bg-red-500/15",
+    emoji: "🎯",
+  },
+  "yt-views": {
+    gradient: "from-orange-500/80 via-amber-500/70 to-red-500/70",
+    accent: "bg-orange-500/15",
+    emoji: "▶️",
+  },
+  "yt-likes": {
+    gradient: "from-rose-500/80 via-red-500/70 to-orange-500/70",
+    accent: "bg-rose-500/15",
+    emoji: "⭐",
+  },
+  "yt-watch": {
+    gradient: "from-amber-500/80 via-orange-500/70 to-red-500/70",
+    accent: "bg-amber-500/15",
+    emoji: "⏱️",
+  },
+};
+
+const Servicos = () => {
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>("instagram");
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+  const sectionRefs: Record<Platform, RefObject<HTMLDivElement>> = {
+    instagram: useRef<HTMLDivElement>(null),
+    tiktok: useRef<HTMLDivElement>(null),
+    youtube: useRef<HTMLDivElement>(null),
+  };
+
+  const groupedServices = useMemo(
+    () =>
+      platforms.map((platform) => ({
+        ...platform,
+        services: services.filter((service) => service.platform === platform.id),
+      })),
+    []
+  );
+
+  const handlePlatformClick = (platformId: Platform) => {
+    setSelectedPlatform(platformId);
+    const section = sectionRefs[platformId].current;
+    if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
-    <section className="relative min-h-screen bg-primary overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, hsl(var(--primary-foreground)) 2px, transparent 2px)`,
-          backgroundSize: '40px 40px'
-        }} />
-      </div>
-
-      <div className="container mx-auto px-4 pt-28 pb-20 md:pt-36">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
-          {/* Content */}
-          <div className="text-left animate-slide-up order-1">
-            <div className="inline-flex items-center gap-2 bg-primary-foreground/20 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-              <Heart className="w-4 h-4 text-primary-foreground" fill="currentColor" />
-              <span className="text-sm font-medium text-primary-foreground">
-                +50.000 clientes satisfeitos
-              </span>
-            </div>
-
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground leading-tight mb-6">
-              Impulsione Suas{" "}
-              <span className="relative inline-block">
-                Redes Sociais
-                <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 12" fill="none">
-                  <path d="M2 10C50 4 150 2 298 6" stroke="hsl(var(--primary-foreground))" strokeWidth="3" strokeLinecap="round" opacity="0.5" />
-                </svg>
-              </span>{" "}
-              Agora
+    <Layout>
+      <div className="min-h-screen pt-24 pb-16">
+        <div className="container mx-auto px-4">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <span className="inline-block text-primary font-semibold text-sm uppercase tracking-wider mb-3">
+              Catálogo Completo
+            </span>
+            <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Nossos Serviços
             </h1>
-
-            <p className="text-lg md:text-xl text-primary-foreground/80 mb-8 max-w-lg">
-              Seguidores, curtidas e visualizações reais para Instagram, TikTok e YouTube. 
-              Entrega rápida e pagamento via PIX.
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Escolha a plataforma e o serviço que você precisa. Pagamento via PIX com entrega instantânea.
             </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-start">
-              <Button asChild variant="hero" size="xl">
-                <Link to="/servicos" className="group">
-                  Comprar Serviços
-                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="xl" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                <Link to="/sobre">
-                  Saiba Mais
-                </Link>
-              </Button>
-            </div>
-
-            {/* Stats */}
-            <div className="flex flex-wrap justify-start gap-8 mt-10">
-              <div>
-                <p className="text-3xl font-display font-bold text-primary-foreground">50K+</p>
-                <p className="text-sm text-primary-foreground/70">Clientes</p>
-              </div>
-              <div>
-                <p className="text-3xl font-display font-bold text-primary-foreground">1M+</p>
-                <p className="text-sm text-primary-foreground/70">Serviços</p>
-              </div>
-              <div>
-                <p className="text-3xl font-display font-bold text-primary-foreground">24/7</p>
-                <p className="text-sm text-primary-foreground/70">Suporte</p>
-              </div>
-            </div>
           </div>
 
-          {/* Image + Trust Block */}
-          <div className="relative animate-fade-in order-2" style={{ animationDelay: '0.2s' }}>
-            {/* Main Image */}
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-              <img
-                src={heroImage}
-                alt="Pessoas felizes usando redes sociais"
-                className="w-full h-auto object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/40 to-transparent" />
-              
-              {/* Floating Badge */}
-              <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur-sm rounded-xl px-4 py-3 shadow-lg">
+          {/* Platform Selector */}
+          <div className="flex flex-wrap justify-center gap-4 mb-12">
+            {platforms.map((platform) => (
+              <button
+                key={platform.id}
+                onClick={() => handlePlatformClick(platform.id)}
+                className={`flex items-center gap-3 px-6 py-4 rounded-2xl border-2 transition-all duration-300 ${
+                  selectedPlatform === platform.id
+                    ? "border-primary bg-primary/10 shadow-[0_0_30px_hsl(45,93%,58%,0.2)]"
+                    : "border-border bg-card hover:border-primary/50"
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${platform.color} flex items-center justify-center text-white`}>
+                  <platform.icon className="w-5 h-5" />
+                </div>
+                <span className={`font-display font-semibold text-lg ${selectedPlatform === platform.id ? "text-primary" : "text-foreground"}`}>
+                  {platform.name}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Services Grid */}
+          <div className="space-y-12">
+            {groupedServices.map((platform) => (
+              <section
+                key={platform.id}
+                ref={sectionRefs[platform.id]}
+                className={`space-y-6 rounded-3xl border border-border/60 p-6 lg:p-8 transition-all ${
+                  selectedPlatform === platform.id
+                    ? "bg-primary/5 ring-2 ring-primary/30 shadow-[0_10px_60px_-25px_hsl(45,93%,58%)]"
+                    : "bg-card/30"
+                }`}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Heart className="w-5 h-5 text-primary" fill="currentColor" />
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${platform.color} flex items-center justify-center text-white shadow-lg`}>
+                    <platform.icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="font-display font-bold text-foreground text-sm">+1.500 likes</p>
-                    <p className="text-xs text-muted-foreground">Acabou de receber</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Instagram Test Block - Animated */}
-            <div className="mt-6 relative group">
-              {/* Animated glow background */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-orange-500 rounded-2xl opacity-75 blur-lg group-hover:opacity-100 animate-pulse-slow" />
-              
-              <div className="relative bg-background rounded-2xl p-5 shadow-xl border border-white/10">
-                {/* Header with Instagram branding */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    {/* Instagram gradient icon */}
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 via-purple-500 to-orange-400 flex items-center justify-center animate-pulse">
-                        <svg viewBox="0 0 24 24" fill="white" className="w-6 h-6">
-                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                        </svg>
-                      </div>
-                      {/* Sparkle animation */}
-                      <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-yellow-400 animate-bounce" />
-                    </div>
-                    <div>
-                      <span className="font-display font-bold text-foreground block">
-                        Teste Grátis
-                      </span>
-                      <span className="text-xs text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400 font-semibold">
-                        100 likes no Instagram
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Animated rocket */}
-                  <div className="relative">
-                    <div className="text-2xl animate-bounce" style={{ animationDuration: '1s' }}>
-                      🚀
-                    </div>
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-gradient-to-t from-orange-500 to-transparent rounded-full blur-sm animate-pulse" />
-                  </div>
-                </div>
-
-                {!isSuccess ? (
-                  <form onSubmit={handleSubmit} className="space-y-3">
-                    <div className="relative">
-                      {/* Instagram gradient border effect */}
-                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 rounded-lg opacity-50 blur-[2px]" />
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded bg-gradient-to-br from-pink-500 via-purple-500 to-orange-400 flex items-center justify-center">
-                          <svg viewBox="0 0 24 24" fill="white" className="w-3 h-3">
-                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/>
-                          </svg>
-                        </div>
-                        <Input
-                          type="url"
-                          placeholder="Cole o link da postagem do Instagram"
-                          value={postLink}
-                          onChange={(e) => setPostLink(e.target.value)}
-                          className="pl-11 h-11 text-sm bg-card border-0"
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Glowing CTA button */}
-                    <div className="relative group/btn">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 rounded-lg opacity-70 blur group-hover/btn:opacity-100 transition-opacity animate-pulse" />
-                      <Button
-                        type="submit"
-                        className="relative w-full h-11 bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 hover:from-pink-600 hover:via-purple-600 hover:to-orange-500 text-white font-bold border-0 shadow-lg"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <>
-                            <Heart className="w-4 h-4 animate-pulse" fill="currentColor" />
-                            Receber 100 Likes Grátis
-                            <Sparkles className="w-4 h-4 animate-pulse" />
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                    
-                    <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-2">
-                      <CheckCircle className="w-3 h-3 text-green-500" />
-                      Sem cadastro • Entrega em segundos
+                    <p className="text-sm uppercase text-primary font-semibold tracking-wide">
+                      {platform.name}
                     </p>
-                  </form>
-                ) : (
-                  <div className="text-center py-4 animate-scale-in">
-                    <div className="relative inline-block">
-                      <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
-                      <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-yellow-400 animate-bounce" />
-                    </div>
-                    <p className="font-bold text-foreground">Likes enviados! 🎉</p>
-                    <p className="text-xs text-muted-foreground">Chegam em até 5 minutos</p>
+                    <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
+                      Serviços para {platform.name}
+                    </h2>
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {platform.services.map((service) => {
+                    const ServiceIcon = getServiceIcon(service.id);
+                    const platformColors = platformById[service.platform];
+                    const visual = serviceVisuals[service.id];
+
+                    return (
+                      <div
+                        key={service.id}
+                        className="group bg-card border border-border rounded-2xl p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_40px_hsl(45,93%,58%,0.1)] card-glow relative overflow-hidden"
+                      >
+                        <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(circle_at_20%_20%,hsl(var(--primary))_0,transparent_30%),radial-gradient(circle_at_80%_0,hsl(var(--foreground))_0,transparent_30%)]" />
+
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${platformColors.color} flex items-center justify-center shadow-md`}>
+                              <platformColors.icon className="w-5 h-5 text-white" />
+                            </div>
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${visual?.accent ?? "bg-primary/15"}`}>
+                              {visual?.emoji ?? "✨"}
+                            </div>
+                            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                              <ServiceIcon className="w-5 h-5 text-primary" />
+                            </div>
+                          </div>
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            {platformColors.name}
+                          </span>
+                        </div>
+
+                        <h3 className="font-display text-xl font-bold text-foreground mb-2">
+                          {service.name}
+                        </h3>
+                        <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+                          {service.description}
+                        </p>
+
+                        {/* linha separadora + stats (opcional) */}
+                        <div className="h-px bg-border mb-4" />
+                        <div className="flex items-center gap-4 mb-6 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Zap className="w-3.5 h-3.5 text-primary" />
+                            <span>Entrega rápida</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Star className="w-3.5 h-3.5 text-primary" />
+                            <span>4.9/5</span>
+                          </div>
+                        </div>
+
+                        <Button variant="cta" className="w-full" onClick={() => setSelectedService(service)}>
+                          <ShoppingCart className="w-4 h-4" />
+                          Comprar
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Wave Bottom */}
-      <div className="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 100" fill="none" className="w-full">
-          <path
-            d="M0 100L60 90C120 80 240 60 360 50C480 40 600 40 720 45C840 50 960 60 1080 65C1200 70 1320 70 1380 70L1440 70V100H1380C1320 100 1200 100 1080 100C960 100 840 100 720 100C600 100 480 100 360 100C240 100 120 100 60 100H0Z"
-            fill="hsl(var(--background))"
-          />
-        </svg>
-      </div>
-    </section>
+      {/* Purchase Modal */}
+      {selectedService && (
+        <PurchaseModal service={selectedService} onClose={() => setSelectedService(null)} />
+      )}
+    </Layout>
   );
-}
+};
+
+export default Servicos;
