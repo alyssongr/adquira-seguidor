@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import type { RefObject } from "react";
 import {
   Instagram,
   Youtube,
@@ -227,9 +228,27 @@ const Servicos = () => {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("instagram");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-  const filteredServices = services.filter(
-    (service) => service.platform === selectedPlatform
+  const sectionRefs: Record<Platform, RefObject<HTMLDivElement>> = {
+    instagram: useRef<HTMLDivElement>(null),
+    tiktok: useRef<HTMLDivElement>(null),
+    youtube: useRef<HTMLDivElement>(null),
+  };
+
+  const groupedServices = useMemo(
+    () => platforms.map((platform) => ({
+      ...platform,
+      services: services.filter((service) => service.platform === platform.id),
+    })),
+    []
   );
+
+  const handlePlatformClick = (platformId: Platform) => {
+    setSelectedPlatform(platformId);
+    const section = sectionRefs[platformId].current;
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
     <Layout>
@@ -254,7 +273,7 @@ const Servicos = () => {
             {platforms.map((platform) => (
               <button
                 key={platform.id}
-                onClick={() => setSelectedPlatform(platform.id)}
+                onClick={() => handlePlatformClick(platform.id)}
                 className={`flex items-center gap-3 px-6 py-4 rounded-2xl border-2 transition-all duration-300 ${
                   selectedPlatform === platform.id
                     ? "border-primary bg-primary/10 shadow-[0_0_30px_hsl(45,93%,58%,0.2)]"
@@ -280,68 +299,87 @@ const Servicos = () => {
           </div>
 
           {/* Services Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredServices.map((service) => (
-              <div
-                key={service.id}
-                className="group bg-card border border-border rounded-2xl p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_40px_hsl(45,93%,58%,0.1)] card-glow"
+          <div className="space-y-12">
+            {groupedServices.map((platform) => (
+              <section
+                key={platform.id}
+                ref={sectionRefs[platform.id]}
+                className="space-y-6"
               >
-                {/* Service Icon */}
-                {(() => {
-                  const ServiceIcon = getServiceIcon(service.id);
-                  const platform = platformById[service.platform];
-                  return (
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${platform.color} flex items-center justify-center mb-4`}>
-                      <ServiceIcon className="w-6 h-6 text-white" />
-                    </div>
-                  );
-                })()}
-
-                {/* Service Info */}
-                <h3 className="font-display text-xl font-bold text-foreground mb-2">
-                  {service.name}
-                </h3>
-                <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-                  {service.description}
-                </p>
-
-                {/* Stats */}
-                <div className="flex items-center gap-4 mb-6 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Zap className="w-3.5 h-3.5 text-primary" />
-                    <span>Entrega rápida</span>
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${platform.color} flex items-center justify-center text-white shadow-lg`}>
+                    <platform.icon />
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 text-primary" />
-                    <span>4.9/5</span>
+                  <div>
+                    <p className="text-sm uppercase text-primary font-semibold tracking-wide">
+                      {platform.name}
+                    </p>
+                    <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
+                      Serviços para {platform.name}
+                    </h2>
                   </div>
                 </div>
 
-                {/* CTA Button */}
-                <Button
-                  variant="cta"
-                  className="w-full"
-                  onClick={() => setSelectedService(service)}
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  Comprar
-                </Button>
-              </div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {platform.services.map((service) => (
+                    <div
+                      key={service.id}
+                      className="group bg-card border border-border rounded-2xl p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_40px_hsl(45,93%,58%,0.1)] card-glow relative overflow-hidden"
+                    >
+                      <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(circle_at_20%_20%,hsl(var(--primary))_0,transparent_30%),radial-gradient(circle_at_80%_0,hsl(var(--foreground))_0,transparent_30%)]" />
+
+                      {/* Service Icon */}
+                      {(() => {
+                        const ServiceIcon = getServiceIcon(service.id);
+                        const platformColors = platformById[service.platform];
+                        return (
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${platformColors.color} flex items-center justify-center shadow-md`}>
+                              <ServiceIcon className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-xs font-semibold text-foreground">
+                              <platformColors.icon className="w-4 h-4" />
+                              <span>{platformColors.name}</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Service Info */}
+                      <h3 className="font-display text-xl font-bold text-foreground mb-2">
+                        {service.name}
+                      </h3>
+                      <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+                        {service.description}
+                      </p>
+
+                      {/* Stats */}
+                      <div className="flex items-center gap-4 mb-6 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Zap className="w-3.5 h-3.5 text-primary" />
+                          <span>Entrega rápida</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3.5 h-3.5 text-primary" />
+                          <span>4.9/5</span>
+                        </div>
+                      </div>
+
+                      {/* CTA Button */}
+                      <Button
+                        variant="cta"
+                        className="w-full"
+                        onClick={() => setSelectedService(service)}
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        Comprar
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
-
-          {/* Empty State */}
-          {filteredServices.length === 0 && (
-            <div className="text-center py-20">
-              <TrendingUp className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-display text-xl font-bold text-foreground mb-2">
-                Nenhum serviço disponível
-              </h3>
-              <p className="text-muted-foreground">
-                Serviços para esta plataforma estarão disponíveis em breve.
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
