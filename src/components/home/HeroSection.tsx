@@ -44,7 +44,7 @@ export function HeroSection() {
       <div className="container mx-auto px-4 pt-28 pb-20 md:pt-36">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
           {/* Content */}
-          <div className="text-center lg:text-left animate-slide-up order-1">
+          <div className="text-left animate-slide-up order-1">
             <div className="inline-flex items-center gap-2 bg-primary-foreground/20 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
               <Heart className="w-4 h-4 text-primary-foreground" fill="currentColor" />
               <span className="text-sm font-medium text-primary-foreground">
@@ -63,12 +63,12 @@ export function HeroSection() {
               Agora
             </h1>
 
-            <p className="text-lg md:text-xl text-primary-foreground/80 mb-8 max-w-lg mx-auto lg:mx-0">
+            <p className="text-lg md:text-xl text-primary-foreground/80 mb-8 max-w-lg">
               Seguidores, curtidas e visualizações reais para Instagram, TikTok e YouTube. 
               Entrega rápida e pagamento via PIX.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <div className="flex flex-col sm:flex-row gap-4 justify-start">
               <Button asChild variant="hero" size="xl">
                 <Link to="/servicos" className="group">
                   Comprar Serviços
@@ -83,7 +83,7 @@ export function HeroSection() {
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-8 mt-10">
+            <div className="flex flex-wrap justify-start gap-8 mt-10">
               <div>
                 <p className="text-3xl font-display font-bold text-primary-foreground">50K+</p>
                 <p className="text-sm text-primary-foreground/70">Clientes</p>
