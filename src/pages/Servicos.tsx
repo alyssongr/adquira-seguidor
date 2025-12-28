@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import type { RefObject } from "react";
 import {
   Instagram,
   Youtube,
@@ -223,13 +224,102 @@ const getServiceIcon = (serviceId: string) => {
   }
 };
 
+const serviceVisuals: Record<
+  Service["id"],
+  { gradient: string; accent: string; emoji: string }
+> = {
+  "ig-followers": {
+    gradient: "from-pink-500/80 via-purple-500/70 to-orange-400/70",
+    accent: "bg-pink-500/15",
+    emoji: "👥",
+  },
+  "ig-likes": {
+    gradient: "from-pink-500/80 via-rose-500/70 to-orange-400/70",
+    accent: "bg-rose-500/15",
+    emoji: "❤️",
+  },
+  "ig-views": {
+    gradient: "from-purple-500/80 via-indigo-500/70 to-blue-500/70",
+    accent: "bg-indigo-500/15",
+    emoji: "🎬",
+  },
+  "ig-story-views": {
+    gradient: "from-amber-400/80 via-orange-500/70 to-pink-500/70",
+    accent: "bg-amber-500/15",
+    emoji: "📱",
+  },
+  "ig-comments": {
+    gradient: "from-purple-500/80 via-pink-500/70 to-rose-500/70",
+    accent: "bg-purple-500/15",
+    emoji: "💬",
+  },
+  "tt-followers": {
+    gradient: "from-cyan-400/80 via-pink-500/70 to-purple-500/70",
+    accent: "bg-cyan-500/15",
+    emoji: "🚀",
+  },
+  "tt-likes": {
+    gradient: "from-fuchsia-500/80 via-cyan-400/70 to-rose-500/70",
+    accent: "bg-fuchsia-500/15",
+    emoji: "👍",
+  },
+  "tt-views": {
+    gradient: "from-sky-400/80 via-cyan-400/70 to-blue-500/70",
+    accent: "bg-sky-500/15",
+    emoji: "👁️",
+  },
+  "tt-shares": {
+    gradient: "from-emerald-400/80 via-cyan-400/70 to-blue-500/70",
+    accent: "bg-emerald-500/15",
+    emoji: "📢",
+  },
+  "yt-subscribers": {
+    gradient: "from-red-500/80 via-rose-500/70 to-orange-500/70",
+    accent: "bg-red-500/15",
+    emoji: "🎯",
+  },
+  "yt-views": {
+    gradient: "from-orange-500/80 via-amber-500/70 to-red-500/70",
+    accent: "bg-orange-500/15",
+    emoji: "▶️",
+  },
+  "yt-likes": {
+    gradient: "from-rose-500/80 via-red-500/70 to-orange-500/70",
+    accent: "bg-rose-500/15",
+    emoji: "⭐",
+  },
+  "yt-watch": {
+    gradient: "from-amber-500/80 via-orange-500/70 to-red-500/70",
+    accent: "bg-amber-500/15",
+    emoji: "⏱️",
+  },
+};
+
 const Servicos = () => {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("instagram");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-  const filteredServices = services.filter(
-    (service) => service.platform === selectedPlatform
+  const sectionRefs: Record<Platform, RefObject<HTMLDivElement>> = {
+    instagram: useRef<HTMLDivElement>(null),
+    tiktok: useRef<HTMLDivElement>(null),
+    youtube: useRef<HTMLDivElement>(null),
+  };
+
+  const groupedServices = useMemo(
+    () => platforms.map((platform) => ({
+      ...platform,
+      services: services.filter((service) => service.platform === platform.id),
+    })),
+    []
   );
+
+  const handlePlatformClick = (platformId: Platform) => {
+    setSelectedPlatform(platformId);
+    const section = sectionRefs[platformId].current;
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
     <Layout>
@@ -254,7 +344,7 @@ const Servicos = () => {
             {platforms.map((platform) => (
               <button
                 key={platform.id}
-                onClick={() => setSelectedPlatform(platform.id)}
+                onClick={() => handlePlatformClick(platform.id)}
                 className={`flex items-center gap-3 px-6 py-4 rounded-2xl border-2 transition-all duration-300 ${
                   selectedPlatform === platform.id
                     ? "border-primary bg-primary/10 shadow-[0_0_30px_hsl(45,93%,58%,0.2)]"
@@ -280,68 +370,101 @@ const Servicos = () => {
           </div>
 
           {/* Services Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredServices.map((service) => (
-              <div
-                key={service.id}
-                className="group bg-card border border-border rounded-2xl p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_40px_hsl(45,93%,58%,0.1)] card-glow"
+          <div className="space-y-12">
+            {groupedServices.map((platform) => (
+              <section
+                key={platform.id}
+                ref={sectionRefs[platform.id]}
+                className={`space-y-6 rounded-3xl border border-border/60 p-6 lg:p-8 transition-all ${
+                  selectedPlatform === platform.id
+                    ? "bg-primary/5 ring-2 ring-primary/30 shadow-[0_10px_60px_-25px_hsl(45,93%,58%)]"
+                    : "bg-card/30"
+                }`}
               >
-                {/* Service Icon */}
-                {(() => {
-                  const ServiceIcon = getServiceIcon(service.id);
-                  const platform = platformById[service.platform];
-                  return (
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${platform.color} flex items-center justify-center mb-4`}>
-                      <ServiceIcon className="w-6 h-6 text-white" />
-                    </div>
-                  );
-                })()}
-
-                {/* Service Info */}
-                <h3 className="font-display text-xl font-bold text-foreground mb-2">
-                  {service.name}
-                </h3>
-                <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-                  {service.description}
-                </p>
-
-                {/* Stats */}
-                <div className="flex items-center gap-4 mb-6 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Zap className="w-3.5 h-3.5 text-primary" />
-                    <span>Entrega rápida</span>
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${platform.color} flex items-center justify-center text-white shadow-lg`}>
+                    <platform.icon />
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 text-primary" />
-                    <span>4.9/5</span>
+                  <div>
+                    <p className="text-sm uppercase text-primary font-semibold tracking-wide">
+                      {platform.name}
+                    </p>
+                    <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
+                      Serviços para {platform.name}
+                    </h2>
                   </div>
                 </div>
 
-                {/* CTA Button */}
-                <Button
-                  variant="cta"
-                  className="w-full"
-                  onClick={() => setSelectedService(service)}
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  Comprar
-                </Button>
-              </div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {platform.services.map((service) => (
+                    <div
+                      key={service.id}
+                      className="group bg-card border border-border rounded-2xl p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_40px_hsl(45,93%,58%,0.1)] card-glow relative overflow-hidden"
+                    >
+                      <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(circle_at_20%_20%,hsl(var(--primary))_0,transparent_30%),radial-gradient(circle_at_80%_0,hsl(var(--foreground))_0,transparent_30%)]" />
+
+                      {/* Service Icon */}
+                      {(() => {
+                        const ServiceIcon = getServiceIcon(service.id);
+                        const platformColors = platformById[service.platform];
+                        const visual = serviceVisuals[service.id];
+                        return (
+                          <>
+                            <div className={`relative mb-6 overflow-hidden rounded-xl border border-border bg-gradient-to-br ${visual?.gradient ?? "from-primary/60 via-primary/40 to-foreground/40"} shadow-inner`}>
+                              <div className="absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_10%_20%,white,transparent_30%),radial-gradient(circle_at_90%_10%,white,transparent_30%),radial-gradient(circle_at_50%_80%,white,transparent_40%)]" />
+                              <div className="flex items-center justify-between px-4 py-3 relative">
+                                <div className={`w-12 h-12 rounded-xl ${visual?.accent ?? "bg-primary/15"} flex items-center justify-center text-2xl`}>
+                                  {visual?.emoji ?? "✨"}
+                                </div>
+                                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-background/80 text-xs font-semibold text-foreground border border-border/80">
+                                  <platformColors.icon className="w-4 h-4" />
+                                  <span>{platformColors.name}</span>
+                                </div>
+                              </div>
+                              <div className="px-4 pb-4 flex items-center gap-3 text-xs text-primary-foreground/80 font-medium">
+                                <ServiceIcon className="w-4 h-4" />
+                                <span>Configuração rápida e segura</span>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
+
+                      {/* Service Info */}
+                      <h3 className="font-display text-xl font-bold text-foreground mb-2">
+                        {service.name}
+                      </h3>
+                      <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+                        {service.description}
+                      </p>
+
+                      {/* Stats */}
+                      <div className="flex items-center gap-4 mb-6 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Zap className="w-3.5 h-3.5 text-primary" />
+                          <span>Entrega rápida</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3.5 h-3.5 text-primary" />
+                          <span>4.9/5</span>
+                        </div>
+                      </div>
+
+                      {/* CTA Button */}
+                      <Button
+                        variant="cta"
+                        className="w-full"
+                        onClick={() => setSelectedService(service)}
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        Comprar
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
-
-          {/* Empty State */}
-          {filteredServices.length === 0 && (
-            <div className="text-center py-20">
-              <TrendingUp className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-display text-xl font-bold text-foreground mb-2">
-                Nenhum serviço disponível
-              </h3>
-              <p className="text-muted-foreground">
-                Serviços para esta plataforma estarão disponíveis em breve.
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
