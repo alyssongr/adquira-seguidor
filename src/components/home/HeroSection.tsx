@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Heart, Instagram, Gift, Loader2, CheckCircle } from "lucide-react";
+import { ArrowRight, Heart, Loader2, CheckCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import heroImage from "@/assets/hero-people.jpg";
 
 export function HeroSection() {
-  const [profileLink, setProfileLink] = useState("");
   const [postLink, setPostLink] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -15,13 +14,13 @@ export function HeroSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!profileLink || !postLink) {
-      toast.error("Preencha todos os campos");
+    if (!postLink) {
+      toast.error("Cole o link da sua postagem");
       return;
     }
 
-    if (!profileLink.includes("instagram.com") || !postLink.includes("instagram.com")) {
-      toast.error("Por favor, insira links válidos do Instagram");
+    if (!postLink.includes("instagram.com")) {
+      toast.error("Por favor, insira um link válido do Instagram");
       return;
     }
 
@@ -125,62 +124,102 @@ export function HeroSection() {
               </div>
             </div>
 
-            {/* Trust Block - Clean version below image */}
-            <div className="mt-6 bg-background/95 backdrop-blur-sm rounded-2xl p-5 shadow-xl border border-border/50">
-              <div className="flex items-center gap-2 mb-4">
-                <Gift className="w-5 h-5 text-primary" />
-                <span className="font-display font-semibold text-foreground">
-                  Teste grátis: <span className="text-primary">100 likes</span>
-                </span>
-              </div>
-
-              {!isSuccess ? (
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  <div className="relative">
-                    <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="url"
-                      placeholder="Link do seu perfil"
-                      value={profileLink}
-                      onChange={(e) => setProfileLink(e.target.value)}
-                      className="pl-10 h-10 text-sm bg-card"
-                      disabled={isLoading}
-                    />
+            {/* Instagram Test Block - Animated */}
+            <div className="mt-6 relative group">
+              {/* Animated glow background */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-orange-500 rounded-2xl opacity-75 blur-lg group-hover:opacity-100 animate-pulse-slow" />
+              
+              <div className="relative bg-background rounded-2xl p-5 shadow-xl border border-white/10">
+                {/* Header with Instagram branding */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    {/* Instagram gradient icon */}
+                    <div className="relative">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 via-purple-500 to-orange-400 flex items-center justify-center animate-pulse">
+                        <svg viewBox="0 0 24 24" fill="white" className="w-6 h-6">
+                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
+                      </div>
+                      {/* Sparkle animation */}
+                      <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-yellow-400 animate-bounce" />
+                    </div>
+                    <div>
+                      <span className="font-display font-bold text-foreground block">
+                        Teste Grátis
+                      </span>
+                      <span className="text-xs text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400 font-semibold">
+                        100 likes no Instagram
+                      </span>
+                    </div>
                   </div>
+                  
+                  {/* Animated rocket */}
                   <div className="relative">
-                    <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="url"
-                      placeholder="Link da postagem"
-                      value={postLink}
-                      onChange={(e) => setPostLink(e.target.value)}
-                      className="pl-10 h-10 text-sm bg-card"
-                      disabled={isLoading}
-                    />
+                    <div className="text-2xl animate-bounce" style={{ animationDuration: '1s' }}>
+                      🚀
+                    </div>
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-gradient-to-t from-orange-500 to-transparent rounded-full blur-sm animate-pulse" />
                   </div>
-                  <Button
-                    type="submit"
-                    variant="cta"
-                    className="w-full h-10"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      "Receber 100 Likes Grátis"
-                    )}
-                  </Button>
-                  <p className="text-xs text-center text-muted-foreground">
-                    Sem cadastro • Sem pagamento • Entrega instantânea
-                  </p>
-                </form>
-              ) : (
-                <div className="text-center py-4">
-                  <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-2" />
-                  <p className="font-semibold text-foreground text-sm">Likes enviados!</p>
-                  <p className="text-xs text-muted-foreground">Aguarde até 5 minutos</p>
                 </div>
-              )}
+
+                {!isSuccess ? (
+                  <form onSubmit={handleSubmit} className="space-y-3">
+                    <div className="relative">
+                      {/* Instagram gradient border effect */}
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 rounded-lg opacity-50 blur-[2px]" />
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded bg-gradient-to-br from-pink-500 via-purple-500 to-orange-400 flex items-center justify-center">
+                          <svg viewBox="0 0 24 24" fill="white" className="w-3 h-3">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/>
+                          </svg>
+                        </div>
+                        <Input
+                          type="url"
+                          placeholder="Cole o link da postagem do Instagram"
+                          value={postLink}
+                          onChange={(e) => setPostLink(e.target.value)}
+                          className="pl-11 h-11 text-sm bg-card border-0"
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Glowing CTA button */}
+                    <div className="relative group/btn">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 rounded-lg opacity-70 blur group-hover/btn:opacity-100 transition-opacity animate-pulse" />
+                      <Button
+                        type="submit"
+                        className="relative w-full h-11 bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 hover:from-pink-600 hover:via-purple-600 hover:to-orange-500 text-white font-bold border-0 shadow-lg"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <>
+                            <Heart className="w-4 h-4 animate-pulse" fill="currentColor" />
+                            Receber 100 Likes Grátis
+                            <Sparkles className="w-4 h-4 animate-pulse" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    
+                    <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-2">
+                      <CheckCircle className="w-3 h-3 text-green-500" />
+                      Sem cadastro • Entrega em segundos
+                    </p>
+                  </form>
+                ) : (
+                  <div className="text-center py-4 animate-scale-in">
+                    <div className="relative inline-block">
+                      <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
+                      <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-yellow-400 animate-bounce" />
+                    </div>
+                    <p className="font-bold text-foreground">Likes enviados! 🎉</p>
+                    <p className="text-xs text-muted-foreground">Chegam em até 5 minutos</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
