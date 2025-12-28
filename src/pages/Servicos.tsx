@@ -10,6 +10,8 @@ import {
   MessageCircle,
   Clock,
   Play,
+  Zap,
+  Star,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -221,6 +223,14 @@ const getServiceIcon = (serviceId: string) => {
   }
 };
 
+const Servicos = () => {
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>("instagram");
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+  const filteredServices = services.filter(
+    (service) => service.platform === selectedPlatform
+  );
+
   return (
     <Layout>
       <div className="min-h-screen pt-24 pb-16">
@@ -276,17 +286,16 @@ const getServiceIcon = (serviceId: string) => {
                 key={service.id}
                 className="group bg-card border border-border rounded-2xl p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_40px_hsl(45,93%,58%,0.1)] card-glow"
               >
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {service.tags.map((tag, i) => (
-                    <span
-                      key={i}
-                      className={`px-3 py-1 text-xs font-medium rounded-full ${getTagStyle(tag)}`}
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                {/* Service Icon */}
+                {(() => {
+                  const ServiceIcon = getServiceIcon(service.id);
+                  const platform = platformById[service.platform];
+                  return (
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${platform.color} flex items-center justify-center mb-4`}>
+                      <ServiceIcon className="w-6 h-6 text-white" />
+                    </div>
+                  );
+                })()}
 
                 {/* Service Info */}
                 <h3 className="font-display text-xl font-bold text-foreground mb-2">
