@@ -29,7 +29,7 @@ interface Service {
 const services: Service[] = [
   // Instagram
   {
-    id: "ig-followers",
+    id: "5571",
     platform: "instagram",
     name: "Seguidores Instagram",
     description: "Aumente seu número de seguidores com perfis reais e ativos.",
@@ -38,7 +38,7 @@ const services: Service[] = [
     maxQuantity: 50000,
   },
   {
-    id: "ig-likes",
+    id: "8952",
     platform: "instagram",
     name: "Curtidas Instagram",
     description: "Curtidas para suas fotos e vídeos. Aumenta o engajamento.",
@@ -47,7 +47,7 @@ const services: Service[] = [
     maxQuantity: 10000,
   },
   {
-    id: "ig-views",
+    id: "7320",
     platform: "instagram",
     name: "Visualizações Reels",
     description: "Impulsione seus Reels com visualizações reais.",
@@ -55,28 +55,10 @@ const services: Service[] = [
     minQuantity: 100,
     maxQuantity: 100000,
   },
-  {
-    id: "ig-story-views",
-    platform: "instagram",
-    name: "Visualizações Stories",
-    description: "Mais visualizações para seus Stories.",
-    pricePerUnit: 0.01,
-    minQuantity: 100,
-    maxQuantity: 50000,
-  },
-  {
-    id: "ig-comments",
-    platform: "instagram",
-    name: "Comentários Instagram",
-    description: "Comentários personalizados para suas postagens.",
-    pricePerUnit: 0.5,
-    minQuantity: 10,
-    maxQuantity: 500,
-  },
 
   // TikTok
   {
-    id: "tt-followers",
+    id: "9390",
     platform: "tiktok",
     name: "Seguidores TikTok",
     description: "Seguidores reais para seu perfil TikTok.",
@@ -85,7 +67,7 @@ const services: Service[] = [
     maxQuantity: 50000,
   },
   {
-    id: "tt-likes",
+    id: "9225",
     platform: "tiktok",
     name: "Curtidas TikTok",
     description: "Curtidas para seus vídeos do TikTok.",
@@ -94,7 +76,7 @@ const services: Service[] = [
     maxQuantity: 20000,
   },
   {
-    id: "tt-views",
+    id: "9444",
     platform: "tiktok",
     name: "Visualizações TikTok",
     description: "Aumente as visualizações dos seus vídeos.",
@@ -102,17 +84,8 @@ const services: Service[] = [
     minQuantity: 500,
     maxQuantity: 500000,
   },
-  {
-    id: "tt-shares",
-    platform: "tiktok",
-    name: "Compartilhamentos TikTok",
-    description: "Mais compartilhamentos para viralizar seus vídeos.",
-    pricePerUnit: 0.08,
-    minQuantity: 50,
-    maxQuantity: 5000,
-  },
 
-  // YouTube
+  // YouTube (IDs serão definidos posteriormente)
   {
     id: "yt-subscribers",
     platform: "youtube",
@@ -139,15 +112,6 @@ const services: Service[] = [
     pricePerUnit: 0.04,
     minQuantity: 50,
     maxQuantity: 10000,
-  },
-  {
-    id: "yt-watch",
-    platform: "youtube",
-    name: "Watch Time YouTube",
-    description: "Horas de visualização para monetização.",
-    pricePerUnit: 2.0,
-    minQuantity: 10,
-    maxQuantity: 4000,
   },
 ];
 
@@ -186,25 +150,18 @@ const platformById = {
 
 const getServiceIcon = (serviceId: string) => {
   switch (serviceId) {
-    case "ig-followers":
-    case "tt-followers":
+    case "5571": // Instagram Followers
+    case "9390": // TikTok Followers
     case "yt-subscribers":
       return Users;
-    case "ig-likes":
-    case "tt-likes":
+    case "8952": // Instagram Likes
+    case "9225": // TikTok Likes
     case "yt-likes":
       return Heart;
-    case "ig-views":
-    case "ig-story-views":
-    case "tt-views":
+    case "7320": // Instagram Views
+    case "9444": // TikTok Views
     case "yt-views":
       return Eye;
-    case "ig-comments":
-      return MessageCircle;
-    case "tt-shares":
-      return Play;
-    case "yt-watch":
-      return Clock;
     default:
       return ShoppingCart;
   }

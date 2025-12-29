@@ -58,6 +58,7 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
           quantidade: quantity,
           url: link.trim(),
           valor: totalPrice,
+          serviceId: service.id,
         }),
       });
 
