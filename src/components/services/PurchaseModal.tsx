@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { X, Minus, Plus, ArrowRight, Link as LinkIcon } from "lucide-react";
+import { X, Minus, Plus, ArrowRight, Link as LinkIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PaymentModal } from "./PaymentModal";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
 
 interface Service {
   id: string;
@@ -18,11 +19,18 @@ interface PurchaseModalProps {
   onClose: () => void;
 }
 
+interface PixResponse {
+  qrCodeBase64: string;
+  qrCodeCopyPaste: string;
+}
+
 export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
   const [quantity, setQuantity] = useState(service.minQuantity);
   const [link, setLink] = useState("");
   const [showPayment, setShowPayment] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [pixData, setPixData] = useState<PixResponse | null>(null);
 
   const totalPrice = quantity * service.pricePerUnit;
 
@@ -31,22 +39,57 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
     setQuantity(newValue);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!link.trim()) {
       setError("Por favor, insira o link da rede social");
       return;
     }
+    
     setError("");
-    setShowPayment(true);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("https://kdm-internet-n8n.tvlueg.easypanel.host/webhook/venda-ebook-pix", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          quantidade: quantity,
+          url: link.trim(),
+          valor: totalPrice,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao gerar PIX");
+      }
+
+      const data: PixResponse = await response.json();
+      
+      if (!data.qrCodeBase64 || !data.qrCodeCopyPaste) {
+        throw new Error("Resposta inválida do servidor");
+      }
+
+      setPixData(data);
+      setShowPayment(true);
+    } catch (err) {
+      console.error("Erro ao processar pagamento:", err);
+      toast.error("Erro ao gerar PIX. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  if (showPayment) {
+  if (showPayment && pixData) {
     return (
       <PaymentModal
         service={service}
         quantity={quantity}
         link={link}
         totalPrice={totalPrice}
+        qrCodeBase64={pixData.qrCodeBase64}
+        qrCodeCopyPaste={pixData.qrCodeCopyPaste}
         onClose={onClose}
         onBack={() => setShowPayment(false)}
       />
@@ -96,7 +139,8 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => handleQuantityChange(quantity - 100)}
-                className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-foreground hover:bg-primary/20 hover:text-primary transition-colors"
+                disabled={isLoading}
+                className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-foreground hover:bg-primary/20 hover:text-primary transition-colors disabled:opacity-50"
               >
                 <Minus className="w-5 h-5" />
               </button>
@@ -107,10 +151,12 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
                 className="text-center text-lg font-semibold flex-1"
                 min={service.minQuantity}
                 max={service.maxQuantity}
+                disabled={isLoading}
               />
               <button
                 onClick={() => handleQuantityChange(quantity + 100)}
-                className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-foreground hover:bg-primary/20 hover:text-primary transition-colors"
+                disabled={isLoading}
+                className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-foreground hover:bg-primary/20 hover:text-primary transition-colors disabled:opacity-50"
               >
                 <Plus className="w-5 h-5" />
               </button>
@@ -136,6 +182,7 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
                   setError("");
                 }}
                 className={`pl-12 ${error ? "border-destructive" : ""}`}
+                disabled={isLoading}
               />
             </div>
             {error && (
@@ -171,9 +218,19 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
             size="xl"
             className="w-full"
             onClick={handleContinue}
+            disabled={isLoading}
           >
-            Continuar para Pagamento
-            <ArrowRight className="w-5 h-5" />
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Gerando PIX...
+              </>
+            ) : (
+              <>
+                Continuar para Pagamento
+                <ArrowRight className="w-5 h-5" />
+              </>
+            )}
           </Button>
         </div>
       </div>
