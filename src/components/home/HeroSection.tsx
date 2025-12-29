@@ -1,461 +1,247 @@
-import { useMemo, useRef, useState } from "react";
-import type { RefObject } from "react";
-import {
-  Instagram,
-  Youtube,
-  ShoppingCart,
-  Users,
-  Heart,
-  Eye,
-  MessageCircle,
-  Clock,
-  Play,
-  Zap,
-  Star,
-} from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Gift, Instagram, CheckCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PurchaseModal } from "@/components/services/PurchaseModal";
+import { Input } from "@/components/ui/input";
+import heroImage from "@/assets/hero-people.jpg";
 
-type Platform = "instagram" | "tiktok" | "youtube";
+export function HeroSection() {
+  const [profileLink, setProfileLink] = useState("");
+  const [postLink, setPostLink] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-interface Service {
-  id: string;
-  platform: Platform;
-  name: string;
-  description: string;
-  tags: string[];
-  pricePerUnit: number;
-  minQuantity: number;
-  maxQuantity: number;
-}
-
-const services: Service[] = [
-  // Instagram
-  {
-    id: "ig-followers",
-    platform: "instagram",
-    name: "Seguidores Instagram",
-    description: "Aumente seu número de seguidores com perfis reais e ativos.",
-    tags: ["Mais vendido", "Entrega rápida"],
-    pricePerUnit: 0.05,
-    minQuantity: 100,
-    maxQuantity: 50000,
-  },
-  {
-    id: "ig-likes",
-    platform: "instagram",
-    name: "Curtidas Instagram",
-    description: "Curtidas para suas fotos e vídeos. Aumenta o engajamento.",
-    tags: ["Popular", "Instantâneo"],
-    pricePerUnit: 0.02,
-    minQuantity: 50,
-    maxQuantity: 10000,
-  },
-  {
-    id: "ig-views",
-    platform: "instagram",
-    name: "Visualizações Reels",
-    description: "Impulsione seus Reels com visualizações reais.",
-    tags: ["Rápido"],
-    pricePerUnit: 0.01,
-    minQuantity: 100,
-    maxQuantity: 100000,
-  },
-  {
-    id: "ig-story-views",
-    platform: "instagram",
-    name: "Visualizações Stories",
-    description: "Mais visualizações para seus Stories.",
-    tags: ["Novo"],
-    pricePerUnit: 0.01,
-    minQuantity: 100,
-    maxQuantity: 50000,
-  },
-  {
-    id: "ig-comments",
-    platform: "instagram",
-    name: "Comentários Instagram",
-    description: "Comentários personalizados para suas postagens.",
-    tags: ["Premium"],
-    pricePerUnit: 0.5,
-    minQuantity: 10,
-    maxQuantity: 500,
-  },
-  // TikTok
-  {
-    id: "tt-followers",
-    platform: "tiktok",
-    name: "Seguidores TikTok",
-    description: "Seguidores reais para seu perfil TikTok.",
-    tags: ["Mais vendido", "Seguro"],
-    pricePerUnit: 0.04,
-    minQuantity: 100,
-    maxQuantity: 50000,
-  },
-  {
-    id: "tt-likes",
-    platform: "tiktok",
-    name: "Curtidas TikTok",
-    description: "Curtidas para seus vídeos do TikTok.",
-    tags: ["Popular"],
-    pricePerUnit: 0.02,
-    minQuantity: 50,
-    maxQuantity: 20000,
-  },
-  {
-    id: "tt-views",
-    platform: "tiktok",
-    name: "Visualizações TikTok",
-    description: "Aumente as visualizações dos seus vídeos.",
-    tags: ["Rápido"],
-    pricePerUnit: 0.005,
-    minQuantity: 500,
-    maxQuantity: 500000,
-  },
-  {
-    id: "tt-shares",
-    platform: "tiktok",
-    name: "Compartilhamentos TikTok",
-    description: "Mais compartilhamentos para viralizar seus vídeos.",
-    tags: ["Novo"],
-    pricePerUnit: 0.08,
-    minQuantity: 50,
-    maxQuantity: 5000,
-  },
-  // YouTube
-  {
-    id: "yt-subscribers",
-    platform: "youtube",
-    name: "Inscritos YouTube",
-    description: "Aumente seus inscritos com qualidade e segurança.",
-    tags: ["Mais vendido", "Premium"],
-    pricePerUnit: 0.1,
-    minQuantity: 50,
-    maxQuantity: 10000,
-  },
-  {
-    id: "yt-views",
-    platform: "youtube",
-    name: "Visualizações YouTube",
-    description: "Visualizações reais para seus vídeos.",
-    tags: ["Popular"],
-    pricePerUnit: 0.02,
-    minQuantity: 100,
-    maxQuantity: 100000,
-  },
-  {
-    id: "yt-likes",
-    platform: "youtube",
-    name: "Likes YouTube",
-    description: "Curtidas para aumentar o engajamento dos vídeos.",
-    tags: ["Rápido"],
-    pricePerUnit: 0.04,
-    minQuantity: 50,
-    maxQuantity: 10000,
-  },
-  {
-    id: "yt-watch",
-    platform: "youtube",
-    name: "Watch Time YouTube",
-    description: "Horas de visualização para monetização.",
-    tags: ["Premium", "Monetização"],
-    pricePerUnit: 2.0,
-    minQuantity: 10,
-    maxQuantity: 4000,
-  },
-];
-
-// ✅ TikTok icon aceitando className (pra não quebrar)
-const TikTokIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className={className ?? "w-5 h-5"}>
-    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-  </svg>
-);
-
-const platforms = [
-  {
-    id: "instagram" as Platform,
-    name: "Instagram",
-    icon: Instagram,
-    color: "from-pink-500 to-purple-600",
-  },
-  {
-    id: "tiktok" as Platform,
-    name: "TikTok",
-    icon: TikTokIcon,
-    color: "from-cyan-400 to-pink-500",
-  },
-  {
-    id: "youtube" as Platform,
-    name: "YouTube",
-    icon: Youtube,
-    color: "from-red-500 to-red-600",
-  },
-];
-
-const platformById = {
-  instagram: platforms[0],
-  tiktok: platforms[1],
-  youtube: platforms[2],
-} as const;
-
-const getServiceIcon = (serviceId: string) => {
-  switch (serviceId) {
-    case "ig-followers":
-    case "tt-followers":
-    case "yt-subscribers":
-      return Users;
-    case "ig-likes":
-    case "tt-likes":
-    case "yt-likes":
-      return Heart;
-    case "ig-views":
-    case "ig-story-views":
-    case "tt-views":
-    case "yt-views":
-      return Eye;
-    case "ig-comments":
-      return MessageCircle;
-    case "tt-shares":
-      return Play;
-    case "yt-watch":
-      return Clock;
-    default:
-      return ShoppingCart;
-  }
-};
-
-const serviceVisuals: Record<
-  Service["id"],
-  { gradient: string; accent: string; emoji: string }
-> = {
-  "ig-followers": {
-    gradient: "from-pink-500/80 via-purple-500/70 to-orange-400/70",
-    accent: "bg-pink-500/15",
-    emoji: "👥",
-  },
-  "ig-likes": {
-    gradient: "from-pink-500/80 via-rose-500/70 to-orange-400/70",
-    accent: "bg-rose-500/15",
-    emoji: "❤️",
-  },
-  "ig-views": {
-    gradient: "from-purple-500/80 via-indigo-500/70 to-blue-500/70",
-    accent: "bg-indigo-500/15",
-    emoji: "🎬",
-  },
-  "ig-story-views": {
-    gradient: "from-amber-400/80 via-orange-500/70 to-pink-500/70",
-    accent: "bg-amber-500/15",
-    emoji: "📱",
-  },
-  "ig-comments": {
-    gradient: "from-purple-500/80 via-pink-500/70 to-rose-500/70",
-    accent: "bg-purple-500/15",
-    emoji: "💬",
-  },
-  "tt-followers": {
-    gradient: "from-cyan-400/80 via-pink-500/70 to-purple-500/70",
-    accent: "bg-cyan-500/15",
-    emoji: "🚀",
-  },
-  "tt-likes": {
-    gradient: "from-fuchsia-500/80 via-cyan-400/70 to-rose-500/70",
-    accent: "bg-fuchsia-500/15",
-    emoji: "👍",
-  },
-  "tt-views": {
-    gradient: "from-sky-400/80 via-cyan-400/70 to-blue-500/70",
-    accent: "bg-sky-500/15",
-    emoji: "👁️",
-  },
-  "tt-shares": {
-    gradient: "from-emerald-400/80 via-cyan-400/70 to-blue-500/70",
-    accent: "bg-emerald-500/15",
-    emoji: "📢",
-  },
-  "yt-subscribers": {
-    gradient: "from-red-500/80 via-rose-500/70 to-orange-500/70",
-    accent: "bg-red-500/15",
-    emoji: "🎯",
-  },
-  "yt-views": {
-    gradient: "from-orange-500/80 via-amber-500/70 to-red-500/70",
-    accent: "bg-orange-500/15",
-    emoji: "▶️",
-  },
-  "yt-likes": {
-    gradient: "from-rose-500/80 via-red-500/70 to-orange-500/70",
-    accent: "bg-rose-500/15",
-    emoji: "⭐",
-  },
-  "yt-watch": {
-    gradient: "from-amber-500/80 via-orange-500/70 to-red-500/70",
-    accent: "bg-amber-500/15",
-    emoji: "⏱️",
-  },
-};
-
-export const HeroSection = () => {
-  const [selectedPlatform, setSelectedPlatform] = useState<Platform>("instagram");
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-
-  const sectionRefs: Record<Platform, RefObject<HTMLDivElement>> = {
-    instagram: useRef<HTMLDivElement>(null),
-    tiktok: useRef<HTMLDivElement>(null),
-    youtube: useRef<HTMLDivElement>(null),
-  };
-
-  const groupedServices = useMemo(
-    () =>
-      platforms.map((platform) => ({
-        ...platform,
-        services: services.filter((service) => service.platform === platform.id),
-      })),
-    []
-  );
-
-  const handlePlatformClick = (platformId: Platform) => {
-    setSelectedPlatform(platformId);
-    const section = sectionRefs[platformId].current;
-    if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
+  const handleFreeLikes = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (profileLink && postLink) {
+      setIsSubmitted(true);
+      // Reset after 3 seconds
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setProfileLink("");
+        setPostLink("");
+      }, 3000);
+    }
   };
 
   return (
     <>
-      <div className="min-h-screen pt-24 pb-16">
-      <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <span className="inline-block text-primary font-semibold text-sm uppercase tracking-wider mb-3">
-              Catálogo Completo
-            </span>
-            <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Nossos Serviços
-            </h1>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Escolha a plataforma e o serviço que você precisa. Pagamento via PIX com entrega instantânea.
-            </p>
-          </div>
+      {/* Hero Section - Yellow Background */}
+      <section className="relative min-h-screen bg-primary overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `radial-gradient(circle at 50% 50%, hsl(var(--primary-foreground)) 1px, transparent 1px)`,
+              backgroundSize: "40px 40px",
+            }}
+          />
+        </div>
 
-          {/* Platform Selector */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {platforms.map((platform) => (
-              <button
-                key={platform.id}
-                onClick={() => handlePlatformClick(platform.id)}
-                className={`flex items-center gap-3 px-6 py-4 rounded-2xl border-2 transition-all duration-300 ${
-                  selectedPlatform === platform.id
-                    ? "border-primary bg-primary/10 shadow-[0_0_30px_hsl(45,93%,58%,0.2)]"
-                    : "border-border bg-card hover:border-primary/50"
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${platform.color} flex items-center justify-center text-white`}>
-                  <platform.icon className="w-5 h-5" />
-                </div>
-                <span className={`font-display font-semibold text-lg ${selectedPlatform === platform.id ? "text-primary" : "text-foreground"}`}>
-                  {platform.name}
+        {/* Decorative Elements */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-primary-foreground/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-48 h-48 bg-primary-foreground/10 rounded-full blur-3xl" />
+
+        <div className="container mx-auto px-4 pt-32 pb-20 relative">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="text-center lg:text-left lg:pl-8 xl:pl-16">
+              <div className="inline-flex items-center gap-2 bg-primary-foreground/20 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
+                <Sparkles className="w-4 h-4 text-primary-foreground" />
+                <span className="text-sm font-medium text-primary-foreground">
+                  #1 em Redes Sociais
                 </span>
-              </button>
-            ))}
-          </div>
+              </div>
 
-          {/* Services Grid */}
-          <div className="space-y-12">
-            {groupedServices.map((platform) => (
-              <section
-                key={platform.id}
-                ref={sectionRefs[platform.id]}
-                className={`space-y-6 rounded-3xl border border-border/60 p-6 lg:p-8 transition-all ${
-                  selectedPlatform === platform.id
-                    ? "bg-primary/5 ring-2 ring-primary/30 shadow-[0_10px_60px_-25px_hsl(45,93%,58%)]"
-                    : "bg-card/30"
-                }`}
-              >
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-6 leading-tight">
+                Impulsione Suas
+                <br />
+                <span className="relative">
+                  Redes Sociais
+                  <svg
+                    className="absolute -bottom-2 left-0 w-full"
+                    viewBox="0 0 300 12"
+                    fill="none"
+                  >
+                    <path
+                      d="M2 8C50 2 150 2 298 8"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      className="text-primary-foreground/40"
+                    />
+                  </svg>
+                </span>
+              </h1>
+
+              <p className="text-lg text-primary-foreground/80 mb-8 max-w-xl mx-auto lg:mx-0">
+                Conquiste mais seguidores, curtidas e engajamento real. 
+                Resultados rápidos e seguros para Instagram, TikTok e YouTube.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Button asChild variant="hero" size="xl">
+                  <Link to="/servicos" className="group">
+                    Comprar Serviços
+                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="xl"
+                  className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+                >
+                  <Link to="/sobre">Saiba Mais</Link>
+                </Button>
+              </div>
+
+              {/* Trust badges */}
+              <div className="flex items-center gap-6 mt-10 justify-center lg:justify-start">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-primary-foreground" />
+                  <span className="text-sm text-primary-foreground/80">100% Seguro</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-primary-foreground" />
+                  <span className="text-sm text-primary-foreground/80">Entrega Rápida</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Content - Image */}
+            <div className="relative">
+              <div className="relative z-10">
+                <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-primary-foreground/20">
+                  <img
+                    src={heroImage}
+                    alt="Pessoas felizes usando redes sociais no celular"
+                    className="w-full h-auto object-cover"
+                  />
+                </div>
+              </div>
+              
+              {/* Floating cards */}
+              <div className="absolute -top-4 -right-4 bg-primary-foreground rounded-2xl p-4 shadow-xl animate-fade-in z-20">
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${platform.color} flex items-center justify-center text-white shadow-lg`}>
-                    <platform.icon className="w-6 h-6" />
+                  <div className="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center">
+                    <Instagram className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm uppercase text-primary font-semibold tracking-wide">
-                      {platform.name}
-                    </p>
-                    <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
-                      Serviços para {platform.name}
-                    </h2>
+                    <p className="text-xs text-muted-foreground">Novos Seguidores</p>
+                    <p className="font-bold text-foreground">+1,234</p>
                   </div>
                 </div>
+              </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {platform.services.map((service) => {
-                    const ServiceIcon = getServiceIcon(service.id);
-                    const platformColors = platformById[service.platform];
-                    const visual = serviceVisuals[service.id];
-
-                    return (
-                      <div
-                        key={service.id}
-                        className="group bg-card border border-border rounded-2xl p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_40px_hsl(45,93%,58%,0.1)] card-glow relative overflow-hidden"
-                      >
-                        <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(circle_at_20%_20%,hsl(var(--primary))_0,transparent_30%),radial-gradient(circle_at_80%_0,hsl(var(--foreground))_0,transparent_30%)]" />
-
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${platformColors.color} flex items-center justify-center shadow-md`}>
-                              <platformColors.icon className="w-5 h-5 text-white" />
-                            </div>
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${visual?.accent ?? "bg-primary/15"}`}>
-                              {visual?.emoji ?? "✨"}
-                            </div>
-                            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                              <ServiceIcon className="w-5 h-5 text-primary" />
-                            </div>
-                          </div>
-                          <span className="text-xs font-semibold text-muted-foreground">
-                            {platformColors.name}
-                          </span>
-                        </div>
-
-                        <h3 className="font-display text-xl font-bold text-foreground mb-2">
-                          {service.name}
-                        </h3>
-                        <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-                          {service.description}
-                        </p>
-
-                        {/* linha separadora + stats (opcional) */}
-                        <div className="h-px bg-border mb-4" />
-                        <div className="flex items-center gap-4 mb-6 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Zap className="w-3.5 h-3.5 text-primary" />
-                            <span>Entrega rápida</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Star className="w-3.5 h-3.5 text-primary" />
-                            <span>4.9/5</span>
-                          </div>
-                        </div>
-
-                        <Button variant="cta" className="w-full" onClick={() => setSelectedService(service)}>
-                          <ShoppingCart className="w-4 h-4" />
-                          Comprar
-                        </Button>
-                      </div>
-                    );
-                  })}
+              <div className="absolute -bottom-4 -left-4 bg-primary-foreground rounded-2xl p-4 shadow-xl animate-fade-in z-20" style={{ animationDelay: "0.2s" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-lg">❤️</span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Curtidas Hoje</p>
+                    <p className="font-bold text-foreground">+5,678</p>
+                  </div>
                 </div>
-              </section>
-            ))}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Purchase Modal */}
-      {selectedService && (
-        <PurchaseModal service={selectedService} onClose={() => setSelectedService(null)} />
-      )}
+      {/* Free Likes Section */}
+      <section className="py-16 bg-gradient-to-b from-background to-card/50 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-5">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `radial-gradient(circle at 50% 50%, hsl(var(--primary)) 1px, transparent 1px)`,
+              backgroundSize: "30px 30px",
+            }}
+          />
+        </div>
+
+        <div className="container mx-auto px-4 relative">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-card border-2 border-primary/30 rounded-3xl p-8 shadow-[0_0_50px_hsl(45,93%,58%,0.15)] relative overflow-hidden">
+              {/* Glow effect */}
+              <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
+              <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
+
+              <div className="relative">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+                    <Gift className="w-6 h-6 text-primary-foreground" />
+                  </div>
+                  <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
+                    100 Likes Grátis!
+                  </h2>
+                </div>
+
+                <p className="text-center text-muted-foreground mb-6">
+                  Teste agora gratuitamente: receba <strong className="text-primary">100 likes reais</strong> no seu Instagram
+                </p>
+
+                {!isSubmitted ? (
+                  <form onSubmit={handleFreeLikes} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Link do seu perfil do Instagram
+                      </label>
+                      <Input
+                        type="url"
+                        placeholder="https://instagram.com/seuperfil"
+                        value={profileLink}
+                        onChange={(e) => setProfileLink(e.target.value)}
+                        required
+                        className="bg-background border-border"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Link da postagem para receber likes
+                      </label>
+                      <Input
+                        type="url"
+                        placeholder="https://instagram.com/p/..."
+                        value={postLink}
+                        onChange={(e) => setPostLink(e.target.value)}
+                        required
+                        className="bg-background border-border"
+                      />
+                    </div>
+
+                    <Button type="submit" variant="cta" size="lg" className="w-full">
+                      <Gift className="w-5 h-5" />
+                      Receber 100 Likes Grátis
+                    </Button>
+                  </form>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="font-display text-xl font-bold text-foreground mb-2">
+                      Solicitação Enviada!
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Seus 100 likes serão entregues em até 10 minutos.
+                    </p>
+                  </div>
+                )}
+
+                <p className="text-xs text-center text-muted-foreground mt-4">
+                  ⚡ Limitado a 1 uso por perfil. Perfil deve ser público.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </>
   );
-};
+}
 
 export default HeroSection;
