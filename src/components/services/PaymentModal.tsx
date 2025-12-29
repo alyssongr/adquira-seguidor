@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, ArrowLeft, Copy, Check, Clock, QrCode } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { X, ArrowLeft, Copy, Check, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { createPortal } from "react-dom";
 
@@ -14,6 +13,8 @@ interface PaymentModalProps {
   quantity: number;
   link: string;
   totalPrice: number;
+  qrCodeBase64: string;
+  qrCodeCopyPaste: string;
   onClose: () => void;
   onBack: () => void;
 }
@@ -23,14 +24,13 @@ export function PaymentModal({
   quantity,
   link,
   totalPrice,
+  qrCodeBase64,
+  qrCodeCopyPaste,
   onClose,
   onBack,
 }: PaymentModalProps) {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutes
-
-  // Simulated PIX code
-  const pixCode = `00020126580014br.gov.bcb.pix0136${Math.random().toString(36).substring(2, 15)}5204000053039865802BR5925ADQUIRA SEGUIDOR LTDA6009SAO PAULO62070503***6304${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -56,7 +56,7 @@ export function PaymentModal({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(pixCode);
+      await navigator.clipboard.writeText(qrCodeCopyPaste);
       setCopied(true);
       toast.success("Código PIX copiado!");
       setTimeout(() => setCopied(false), 3000);
@@ -75,11 +75,11 @@ export function PaymentModal({
 
       {/* Modal */}
       <div 
-        className="relative w-full max-w-lg bg-card border border-border rounded-3xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg bg-card border border-border rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
         style={{ animation: 'scaleIn 0.3s ease-out' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-card z-10">
           <div className="flex items-center gap-3">
             <button
               onClick={onBack}
@@ -110,12 +110,14 @@ export function PaymentModal({
             </span>
           </div>
 
-          {/* QR Code Placeholder */}
+          {/* QR Code from Base64 */}
           <div className="flex flex-col items-center">
-            <div className="w-48 h-48 bg-foreground rounded-2xl p-3 mb-4">
-              <div className="w-full h-full bg-background rounded-lg flex items-center justify-center">
-                <QrCode className="w-32 h-32 text-foreground" />
-              </div>
+            <div className="w-56 h-56 bg-white rounded-2xl p-3 mb-4 shadow-lg">
+              <img 
+                src={qrCodeBase64.startsWith('data:') ? qrCodeBase64 : `data:image/png;base64,${qrCodeBase64}`}
+                alt="QR Code PIX"
+                className="w-full h-full object-contain"
+              />
             </div>
             <p className="text-sm text-muted-foreground text-center">
               Escaneie o QR Code com o app do seu banco
@@ -136,7 +138,7 @@ export function PaymentModal({
             </label>
             <div className="relative">
               <div className="bg-secondary rounded-xl p-4 pr-14 font-mono text-xs text-muted-foreground break-all max-h-24 overflow-y-auto">
-                {pixCode}
+                {qrCodeCopyPaste}
               </div>
               <button
                 onClick={handleCopy}
