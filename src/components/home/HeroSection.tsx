@@ -13,7 +13,6 @@ import {
   Zap,
   Star,
 } from "lucide-react";
-import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { PurchaseModal } from "@/components/services/PurchaseModal";
 
@@ -297,7 +296,7 @@ const serviceVisuals: Record<
   },
 };
 
-const Servicos = () => {
+export const HeroSection = () => {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("instagram");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
@@ -323,9 +322,9 @@ const Servicos = () => {
   };
 
   return (
-    <Layout>
+    <>
       <div className="min-h-screen pt-24 pb-16">
-        <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4">
           {/* Header */}
           <div className="text-center mb-12">
             <span className="inline-block text-primary font-semibold text-sm uppercase tracking-wider mb-3">
@@ -455,8 +454,8 @@ const Servicos = () => {
       {selectedService && (
         <PurchaseModal service={selectedService} onClose={() => setSelectedService(null)} />
       )}
-    </Layout>
+    </>
   );
 };
 
-export default Servicos;
+export default HeroSection;
