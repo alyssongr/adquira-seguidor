@@ -66,13 +66,19 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
         throw new Error("Erro ao gerar PIX");
       }
 
-      const data: PixResponse = await response.json();
+      const responseData = await response.json();
       
-      if (!data.qrCodeBase64 || !data.qrCodeCopyPaste) {
+      // Response comes as array, get first element
+      const data = Array.isArray(responseData) ? responseData[0] : responseData;
+      
+      if (!data?.qrCodeBase64) {
         throw new Error("Resposta inválida do servidor");
       }
 
-      setPixData(data);
+      setPixData({
+        qrCodeBase64: data.qrCodeBase64,
+        qrCodeCopyPaste: data.qrCodeCopyPaste || data.qrCodeBase64, // fallback if null
+      });
       setShowPayment(true);
     } catch (err) {
       console.error("Erro ao processar pagamento:", err);
