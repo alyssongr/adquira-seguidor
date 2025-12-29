@@ -1,18 +1,14 @@
-import { useMemo, useRef, useState } from "react";
-import type { RefObject } from "react";
+import { useMemo, useState } from "react";
 import {
   Instagram,
   Youtube,
   ShoppingCart,
-  TrendingUp,
   Users,
   Heart,
   Eye,
   MessageCircle,
   Clock,
   Play,
-  Zap,
-  Star,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -25,7 +21,6 @@ interface Service {
   platform: Platform;
   name: string;
   description: string;
-  tags: string[];
   pricePerUnit: number;
   minQuantity: number;
   maxQuantity: number;
@@ -38,7 +33,6 @@ const services: Service[] = [
     platform: "instagram",
     name: "Seguidores Instagram",
     description: "Aumente seu número de seguidores com perfis reais e ativos.",
-    tags: ["Mais vendido", "Entrega rápida"],
     pricePerUnit: 0.05,
     minQuantity: 100,
     maxQuantity: 50000,
@@ -48,7 +42,6 @@ const services: Service[] = [
     platform: "instagram",
     name: "Curtidas Instagram",
     description: "Curtidas para suas fotos e vídeos. Aumenta o engajamento.",
-    tags: ["Popular", "Instantâneo"],
     pricePerUnit: 0.02,
     minQuantity: 50,
     maxQuantity: 10000,
@@ -58,7 +51,6 @@ const services: Service[] = [
     platform: "instagram",
     name: "Visualizações Reels",
     description: "Impulsione seus Reels com visualizações reais.",
-    tags: ["Rápido"],
     pricePerUnit: 0.01,
     minQuantity: 100,
     maxQuantity: 100000,
@@ -68,7 +60,6 @@ const services: Service[] = [
     platform: "instagram",
     name: "Visualizações Stories",
     description: "Mais visualizações para seus Stories.",
-    tags: ["Novo"],
     pricePerUnit: 0.01,
     minQuantity: 100,
     maxQuantity: 50000,
@@ -78,18 +69,17 @@ const services: Service[] = [
     platform: "instagram",
     name: "Comentários Instagram",
     description: "Comentários personalizados para suas postagens.",
-    tags: ["Premium"],
     pricePerUnit: 0.5,
     minQuantity: 10,
     maxQuantity: 500,
   },
+
   // TikTok
   {
     id: "tt-followers",
     platform: "tiktok",
     name: "Seguidores TikTok",
     description: "Seguidores reais para seu perfil TikTok.",
-    tags: ["Mais vendido", "Seguro"],
     pricePerUnit: 0.04,
     minQuantity: 100,
     maxQuantity: 50000,
@@ -99,7 +89,6 @@ const services: Service[] = [
     platform: "tiktok",
     name: "Curtidas TikTok",
     description: "Curtidas para seus vídeos do TikTok.",
-    tags: ["Popular"],
     pricePerUnit: 0.02,
     minQuantity: 50,
     maxQuantity: 20000,
@@ -109,7 +98,6 @@ const services: Service[] = [
     platform: "tiktok",
     name: "Visualizações TikTok",
     description: "Aumente as visualizações dos seus vídeos.",
-    tags: ["Rápido"],
     pricePerUnit: 0.005,
     minQuantity: 500,
     maxQuantity: 500000,
@@ -119,18 +107,17 @@ const services: Service[] = [
     platform: "tiktok",
     name: "Compartilhamentos TikTok",
     description: "Mais compartilhamentos para viralizar seus vídeos.",
-    tags: ["Novo"],
     pricePerUnit: 0.08,
     minQuantity: 50,
     maxQuantity: 5000,
   },
+
   // YouTube
   {
     id: "yt-subscribers",
     platform: "youtube",
     name: "Inscritos YouTube",
     description: "Aumente seus inscritos com qualidade e segurança.",
-    tags: ["Mais vendido", "Premium"],
     pricePerUnit: 0.1,
     minQuantity: 50,
     maxQuantity: 10000,
@@ -140,7 +127,6 @@ const services: Service[] = [
     platform: "youtube",
     name: "Visualizações YouTube",
     description: "Visualizações reais para seus vídeos.",
-    tags: ["Popular"],
     pricePerUnit: 0.02,
     minQuantity: 100,
     maxQuantity: 100000,
@@ -150,7 +136,6 @@ const services: Service[] = [
     platform: "youtube",
     name: "Likes YouTube",
     description: "Curtidas para aumentar o engajamento dos vídeos.",
-    tags: ["Rápido"],
     pricePerUnit: 0.04,
     minQuantity: 50,
     maxQuantity: 10000,
@@ -160,28 +145,29 @@ const services: Service[] = [
     platform: "youtube",
     name: "Watch Time YouTube",
     description: "Horas de visualização para monetização.",
-    tags: ["Premium", "Monetização"],
     pricePerUnit: 2.0,
     minQuantity: 10,
     maxQuantity: 4000,
   },
 ];
 
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className ?? "w-5 h-5"}>
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+  </svg>
+);
+
 const platforms = [
   {
     id: "instagram" as Platform,
     name: "Instagram",
     icon: Instagram,
-    color: "from-pink-500 to-purple-600",
+    color: "from-[hsl(var(--social-instagram-1))] to-[hsl(var(--social-instagram-2))]",
   },
   {
     id: "tiktok" as Platform,
     name: "TikTok",
-    icon: () => (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-      </svg>
-    ),
+    icon: TikTokIcon,
     color: "from-cyan-400 to-pink-500",
   },
   {
@@ -228,34 +214,19 @@ const Servicos = () => {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("instagram");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-  const sectionRefs: Record<Platform, RefObject<HTMLDivElement>> = {
-    instagram: useRef<HTMLDivElement>(null),
-    tiktok: useRef<HTMLDivElement>(null),
-    youtube: useRef<HTMLDivElement>(null),
-  };
-
-  const groupedServices = useMemo(
-    () => platforms.map((platform) => ({
-      ...platform,
-      services: services.filter((service) => service.platform === platform.id),
-    })),
-    []
+  const visibleServices = useMemo(
+    () => services.filter((service) => service.platform === selectedPlatform),
+    [selectedPlatform]
   );
 
-  const handlePlatformClick = (platformId: Platform) => {
-    setSelectedPlatform(platformId);
-    const section = sectionRefs[platformId].current;
-    if (section) {
-      section.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
+  const platformMeta = platformById[selectedPlatform];
 
   return (
     <Layout>
       <div className="min-h-screen pt-24 pb-16">
         <div className="container mx-auto px-4">
           {/* Header */}
-          <div className="text-center mb-12">
+          <header className="text-center mb-12">
             <span className="inline-block text-primary font-semibold text-sm uppercase tracking-wider mb-3">
               Catálogo Completo
             </span>
@@ -263,132 +234,130 @@ const Servicos = () => {
               Nossos Serviços
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Escolha a plataforma e o serviço que você precisa. 
-              Pagamento via PIX com entrega instantânea.
+              Escolha a plataforma e veja todos os serviços disponíveis.
             </p>
-          </div>
+          </header>
 
           {/* Platform Selector */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {platforms.map((platform) => (
-              <button
-                key={platform.id}
-                onClick={() => handlePlatformClick(platform.id)}
-                className={`flex items-center gap-3 px-6 py-4 rounded-2xl border-2 transition-all duration-300 ${
-                  selectedPlatform === platform.id
-                    ? "border-primary bg-primary/10 shadow-[0_0_30px_hsl(45,93%,58%,0.2)]"
-                    : "border-border bg-card hover:border-primary/50"
-                }`}
-              >
-                <div
-                  className={`w-10 h-10 rounded-xl bg-gradient-to-br ${platform.color} flex items-center justify-center text-white`}
-                >
-                  <platform.icon />
-                </div>
-                <span
-                  className={`font-display font-semibold text-lg ${
-                    selectedPlatform === platform.id
-                      ? "text-primary"
-                      : "text-foreground"
+          <nav aria-label="Selecionar plataforma" className="flex flex-wrap justify-center gap-4 mb-12">
+            {platforms.map((platform) => {
+              const isActive = selectedPlatform === platform.id;
+              return (
+                <button
+                  key={platform.id}
+                  onClick={() => setSelectedPlatform(platform.id)}
+                  className={`flex items-center gap-3 px-6 py-4 rounded-2xl border-2 transition-all duration-300 ${
+                    isActive
+                      ? "border-primary bg-primary/10 shadow-[0_0_30px_hsl(45,93%,58%,0.2)]"
+                      : "border-border bg-card hover:border-primary/50"
                   }`}
                 >
-                  {platform.name}
-                </span>
-              </button>
-            ))}
-          </div>
+                  <div
+                    className={`w-10 h-10 rounded-xl bg-gradient-to-br ${platform.color} flex items-center justify-center text-foreground`}
+                  >
+                    <platform.icon className="w-5 h-5" />
+                  </div>
+                  <span
+                    className={`font-display font-semibold text-lg ${
+                      isActive ? "text-primary" : "text-foreground"
+                    }`}
+                  >
+                    {platform.name}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
 
-          {/* Services Grid */}
-          <div className="space-y-12">
-            {groupedServices.map((platform) => (
-              <section
-                key={platform.id}
-                ref={sectionRefs[platform.id]}
-                className="space-y-6"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${platform.color} flex items-center justify-center text-white shadow-lg`}>
-                    <platform.icon />
-                  </div>
-                  <div>
-                    <p className="text-sm uppercase text-primary font-semibold tracking-wide">
-                      {platform.name}
-                    </p>
-                    <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
-                      Serviços para {platform.name}
-                    </h2>
-                  </div>
+          {/* Services (only selected platform) */}
+          <main>
+            <section className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${platformMeta.color} flex items-center justify-center text-foreground shadow-lg`}
+                >
+                  <platformMeta.icon className="w-6 h-6" />
                 </div>
+                <div>
+                  <p className="text-sm uppercase text-primary font-semibold tracking-wide">
+                    {platformMeta.name}
+                  </p>
+                  <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
+                    Serviços para {platformMeta.name}
+                  </h2>
+                </div>
+              </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {platform.services.map((service) => (
-                    <div
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {visibleServices.map((service) => {
+                  const ServiceIcon = getServiceIcon(service.id);
+
+                  return (
+                    <article
                       key={service.id}
                       className="group bg-card border border-border rounded-2xl p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_40px_hsl(45,93%,58%,0.1)] card-glow relative overflow-hidden"
                     >
-                      <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(circle_at_20%_20%,hsl(var(--primary))_0,transparent_30%),radial-gradient(circle_at_80%_0,hsl(var(--foreground))_0,transparent_30%)]" />
+                      <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_20%_20%,hsl(var(--primary))_0,transparent_35%),radial-gradient(circle_at_80%_0,hsl(var(--foreground))_0,transparent_35%)]"
+                      />
 
-                      {/* Service Icon */}
-                      {(() => {
-                        const ServiceIcon = getServiceIcon(service.id);
-                        const platformColors = platformById[service.platform];
-                        return (
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${platformColors.color} flex items-center justify-center shadow-md`}>
-                              <ServiceIcon className="w-6 h-6 text-white" />
+                      <div className="relative">
+                        {/* mini "logo" + ícone do serviço */}
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${platformMeta.color} flex items-center justify-center text-foreground shadow-md`}
+                            >
+                              <platformMeta.icon className="w-6 h-6" />
                             </div>
-                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-xs font-semibold text-foreground">
-                              <platformColors.icon className="w-4 h-4" />
-                              <span>{platformColors.name}</span>
+                            <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                              <ServiceIcon className="w-6 h-6 text-primary" />
                             </div>
                           </div>
-                        );
-                      })()}
 
-                      {/* Service Info */}
-                      <h3 className="font-display text-xl font-bold text-foreground mb-2">
-                        {service.name}
-                      </h3>
-                      <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-                        {service.description}
-                      </p>
+                          <div className="text-right">
+                            <p className="text-[11px] text-muted-foreground">a partir de</p>
+                            <p className="font-display text-lg font-bold text-primary">
+                              R$ {service.pricePerUnit.toFixed(2)}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">por unidade</p>
+                          </div>
+                        </div>
 
-                      {/* Stats */}
-                      <div className="flex items-center gap-4 mb-6 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Zap className="w-3.5 h-3.5 text-primary" />
-                          <span>Entrega rápida</span>
+                        <h3 className="font-display text-xl font-bold text-foreground mb-2">
+                          {service.name}
+                        </h3>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          {service.description}
+                        </p>
+
+                        <div className="mt-5 flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Mín: {service.minQuantity.toLocaleString()}</span>
+                          <span>Máx: {service.maxQuantity.toLocaleString()}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3.5 h-3.5 text-primary" />
-                          <span>4.9/5</span>
-                        </div>
+
+                        <Button
+                          variant="cta"
+                          className="w-full mt-6"
+                          onClick={() => setSelectedService(service)}
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Comprar
+                        </Button>
                       </div>
-
-                      {/* CTA Button */}
-                      <Button
-                        variant="cta"
-                        className="w-full"
-                        onClick={() => setSelectedService(service)}
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                        Comprar
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          </main>
         </div>
       </div>
 
       {/* Purchase Modal */}
       {selectedService && (
-        <PurchaseModal
-          service={selectedService}
-          onClose={() => setSelectedService(null)}
-        />
+        <PurchaseModal service={selectedService} onClose={() => setSelectedService(null)} />
       )}
     </Layout>
   );
