@@ -26,8 +26,9 @@ export function HeroSection() {
   const [instagramLink, setInstagramLink] = useState("");
   const [freeLikeError, setFreeLikeError] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleFreeLikes = (e: React.FormEvent) => {
+  const handleFreeLikes = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const parsed = instagramUrlSchema.safeParse(instagramLink);
@@ -37,12 +38,37 @@ export function HeroSection() {
     }
 
     setFreeLikeError("");
-    setIsSubmitted(true);
+    setIsLoading(true);
 
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setInstagramLink("");
-    }, 3000);
+    try {
+      const response = await fetch("https://kdm-internet-n8n.tvlueg.easypanel.host/webhook/receber-pedido-gratis", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: instagramLink.trim(),
+          tipo: "likes",
+          quantidade: 100,
+          plataforma: "instagram",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao enviar solicitação");
+      }
+
+      setIsSubmitted(true);
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setInstagramLink("");
+      }, 3000);
+    } catch (err) {
+      console.error("Erro ao enviar pedido grátis:", err);
+      setFreeLikeError("Erro ao processar. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -217,9 +243,10 @@ export function HeroSection() {
                         type="submit"
                         variant="cta"
                         size="lg"
+                        disabled={isLoading}
                         className="w-full relative overflow-hidden before:absolute before:inset-y-0 before:left-0 before:w-1/2 before:-translate-x-full before:bg-[linear-gradient(110deg,transparent,hsl(var(--primary-foreground)/0.35),transparent)] before:content-[''] before:animate-shimmer before:pointer-events-none"
                       >
-                        Receber 100 Likes Grátis
+                        {isLoading ? "Enviando..." : "Receber 100 Likes Grátis"}
                       </Button>
 
                       <p className="text-xs text-muted-foreground">

@@ -1,10 +1,18 @@
 import { useState } from "react";
 import { X, Minus, Plus, ArrowRight, Link as LinkIcon, Loader2 } from "lucide-react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PaymentModal } from "./PaymentModal";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
+
+const urlSchema = z
+  .string()
+  .trim()
+  .min(1, "Por favor, insira o link da rede social")
+  .max(2048, "Link muito longo")
+  .url("Cole um link válido (deve começar com https://)");
 
 interface Service {
   id: string;
@@ -40,8 +48,9 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
   };
 
   const handleContinue = async () => {
-    if (!link.trim()) {
-      setError("Por favor, insira o link da rede social");
+    const parsed = urlSchema.safeParse(link);
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Link inválido");
       return;
     }
     
