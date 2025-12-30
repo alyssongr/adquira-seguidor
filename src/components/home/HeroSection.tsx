@@ -62,7 +62,7 @@ export function HeroSection() {
       setTimeout(() => {
         setIsSubmitted(false);
         setInstagramLink("");
-      }, 3000);
+      }, 10000);
     } catch (err) {
       console.error("Erro ao enviar pedido grátis:", err);
       setFreeLikeError("Erro ao processar. Tente novamente.");
@@ -254,16 +254,28 @@ export function HeroSection() {
                       </p>
                     </form>
                   ) : (
-                    <div className="text-center py-6">
+                    <div className="text-center py-6 animate-fade-in">
                       <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-[0_0_30px_hsl(45,93%,58%,0.35)]">
                         <CheckCircle className="w-7 h-7 text-primary-foreground" />
                       </div>
                       <h3 className="font-display text-lg font-bold text-foreground mb-1">
-                        Solicitação enviada!
+                        Pedido realizado com sucesso! 🎉
                       </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Seus likes serão entregues em alguns minutos.
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Dentro de alguns minutos as curtidas irão aparecer na sua postagem.
                       </p>
+                      <p className="text-xs text-destructive font-medium mb-4">
+                        ⚠️ Lembre-se: sua conta do Instagram precisa estar pública!
+                      </p>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Aproveite para conhecer nossos serviços com preços super acessíveis!
+                      </p>
+                      <Button asChild variant="cta" size="default">
+                        <Link to="/servicos" className="group">
+                          Ver Serviços
+                          <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                        </Link>
+                      </Button>
                     </div>
                   )}
                 </div>
