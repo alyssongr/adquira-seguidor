@@ -66,6 +66,7 @@ const services: Service[] = [
   {
     id: "1566",
     platform: "instagram",
+    name: "Visualizações Instagram",
     name: "Visualizações de Vídeo do Instagram",
     description: "Impulsione seus Reels com visualizações reais.",
     packageOptions: [

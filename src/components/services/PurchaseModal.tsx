@@ -91,8 +91,9 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          quantidade: quantity,
           url: link.trim(),
+          packageId: selectedPackage?.packageId ?? null,
+          servico: service.name,
           valor: totalPrice,
           serviceId: service.id,
           packageId: selectedPackage?.packageId ?? null,
