@@ -94,6 +94,9 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
           url: link.trim(),
           packageId: selectedPackage?.packageId ?? null,
           servico: service.name,
+          valor: totalPrice,
+          serviceId: service.id,
+          packageId: selectedPackage?.packageId ?? null,
         }),
       });
 

@@ -36,7 +36,7 @@ const services: Service[] = [
   {
     id: "9397",
     platform: "instagram",
-    name: "Seguidores Instagram",
+    name: "Instagram Followers",
     description: "Aumente seu número de seguidores com perfis reais e ativos.",
     packageOptions: [
       { quantity: 100, price: 2.9, packageId: "IGF-100-N7aP2kL9" },
@@ -51,7 +51,7 @@ const services: Service[] = [
   {
     id: "9329",
     platform: "instagram",
-    name: "Curtidas Instagram",
+    name: "Instagram Likes",
     description: "Curtidas para suas fotos e vídeos. Aumenta o engajamento.",
     packageOptions: [
       { quantity: 100, price: 1.9, packageId: "IGL-100-B3xD7qM2" },
@@ -67,6 +67,7 @@ const services: Service[] = [
     id: "1566",
     platform: "instagram",
     name: "Visualizações Instagram",
+    name: "Visualizações de Vídeo do Instagram",
     description: "Impulsione seus Reels com visualizações reais.",
     packageOptions: [
       { quantity: 1000, price: 2.9, packageId: "IGV-1000-C7mS4kL2" },
