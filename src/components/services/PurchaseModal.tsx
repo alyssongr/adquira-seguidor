@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Minus, Plus, ArrowRight, Link as LinkIcon, Loader2 } from "lucide-react";
+import { X, ArrowRight, Link as LinkIcon, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,9 +17,14 @@ const urlSchema = z
 interface Service {
   id: string;
   name: string;
-  pricePerUnit: number;
-  minQuantity: number;
-  maxQuantity: number;
+  pricePerUnit?: number;
+  minQuantity?: number;
+  maxQuantity?: number;
+  packageOptions?: {
+    quantity: number;
+    price: number;
+    packageId: string;
+  }[];
 }
 
 interface PurchaseModalProps {
@@ -33,17 +38,39 @@ interface PixResponse {
 }
 
 export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
-  const [quantity, setQuantity] = useState(service.minQuantity);
+  const [quantity, setQuantity] = useState(
+    service.packageOptions?.[0]?.quantity ?? service.minQuantity ?? 0
+  );
   const [link, setLink] = useState("");
   const [showPayment, setShowPayment] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [pixData, setPixData] = useState<PixResponse | null>(null);
 
-  const totalPrice = quantity * service.pricePerUnit;
+  const selectedPackage = service.packageOptions?.find((pkg) => pkg.quantity === quantity);
+
+  const totalPrice = selectedPackage ? selectedPackage.price : quantity * (service.pricePerUnit ?? 0);
+
+  const packageBaseUnitPrice = service.packageOptions
+    ? service.packageOptions[0].price / service.packageOptions[0].quantity
+    : null;
+
+  const formatCurrency = (value: number) =>
+    value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const formatQuantity = (value: number) => value.toLocaleString("pt-BR");
 
   const handleQuantityChange = (value: number) => {
-    const newValue = Math.max(service.minQuantity, Math.min(service.maxQuantity, value));
+    if (service.packageOptions) {
+      if (service.packageOptions.some((pkg) => pkg.quantity === value)) {
+        setQuantity(value);
+      }
+      return;
+    }
+
+    const minQuantity = service.minQuantity ?? 0;
+    const maxQuantity = service.maxQuantity ?? value;
+    const newValue = Math.max(minQuantity, Math.min(maxQuantity, value));
     setQuantity(newValue);
   };
 
@@ -68,6 +95,7 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
           url: link.trim(),
           valor: totalPrice,
           serviceId: service.id,
+          packageId: selectedPackage?.packageId ?? null,
         }),
       });
 
@@ -152,34 +180,55 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
             <label className="block text-sm font-medium text-foreground mb-3">
               Quantidade
             </label>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => handleQuantityChange(quantity - 100)}
-                disabled={isLoading}
-                className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-foreground hover:bg-primary/20 hover:text-primary transition-colors disabled:opacity-50"
-              >
-                <Minus className="w-5 h-5" />
-              </button>
-              <Input
-                type="number"
-                value={quantity}
-                onChange={(e) => handleQuantityChange(parseInt(e.target.value) || service.minQuantity)}
-                className="text-center text-lg font-semibold flex-1"
-                min={service.minQuantity}
-                max={service.maxQuantity}
-                disabled={isLoading}
-              />
-              <button
-                onClick={() => handleQuantityChange(quantity + 100)}
-                disabled={isLoading}
-                className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-foreground hover:bg-primary/20 hover:text-primary transition-colors disabled:opacity-50"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Mínimo: {service.minQuantity.toLocaleString()} | Máximo: {service.maxQuantity.toLocaleString()}
-            </p>
+
+            {service.packageOptions ? (
+              <div className="grid grid-cols-2 gap-3">
+                {service.packageOptions.map((pkg, index) => {
+                  const isActive = quantity === pkg.quantity;
+                  const unitPrice = pkg.price / pkg.quantity;
+                  const discountPercent = packageBaseUnitPrice
+                    ? Math.max(0, Math.round((1 - unitPrice / packageBaseUnitPrice) * 100))
+                    : 0;
+
+                  return (
+                    <button
+                      key={pkg.packageId}
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleQuantityChange(pkg.quantity)}
+                      className={`relative rounded-xl border p-3 text-left transition-all disabled:opacity-60 ${
+                        isActive
+                          ? "border-primary bg-primary/10 shadow-[0_0_24px_hsl(45,93%,58%,0.15)]"
+                          : "border-border bg-secondary/40 hover:border-primary/40"
+                      }`}
+                    >
+                      {discountPercent > 0 && index > 0 && (
+                        <span className="absolute -top-2 right-2 rounded-full bg-green-500/20 px-2 py-0.5 text-[10px] font-semibold text-green-600">
+                          -{discountPercent}% OFF
+                        </span>
+                      )}
+                      <p className="font-semibold text-foreground">{formatQuantity(pkg.quantity)}</p>
+                      <p className="text-sm font-bold text-primary">R$ {formatCurrency(pkg.price)}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <>
+                <Input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => handleQuantityChange(parseInt(e.target.value) || service.minQuantity || 0)}
+                  className="text-center text-lg font-semibold"
+                  min={service.minQuantity}
+                  max={service.maxQuantity}
+                  disabled={isLoading}
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Mínimo: {service.minQuantity?.toLocaleString("pt-BR")} | Máximo: {service.maxQuantity?.toLocaleString("pt-BR")}
+                </p>
+              </>
+            )}
           </div>
 
           {/* Link Input */}
@@ -210,19 +259,28 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
           <div className="bg-primary/10 rounded-xl p-4 border border-primary/20">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-muted-foreground">Quantidade</span>
-              <span className="font-medium text-foreground">{quantity.toLocaleString()}</span>
+              <span className="font-medium text-foreground">{formatQuantity(quantity)}</span>
             </div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-muted-foreground">Preço unitário</span>
-              <span className="font-medium text-foreground">
-                R$ {service.pricePerUnit.toFixed(2)}
-              </span>
-            </div>
+
+            {selectedPackage ? (
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-muted-foreground">Valor selecionado</span>
+                <span className="font-medium text-foreground">R$ {formatCurrency(selectedPackage.price)}</span>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-muted-foreground">Preço unitário</span>
+                <span className="font-medium text-foreground">
+                  R$ {service.pricePerUnit !== undefined ? formatCurrency(service.pricePerUnit) : "--"}
+                </span>
+              </div>
+            )}
+
             <div className="border-t border-border pt-2 mt-2">
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-foreground">Total</span>
                 <span className="font-display text-2xl font-bold text-primary">
-                  R$ {totalPrice.toFixed(2)}
+                  R$ {formatCurrency(totalPrice)}
                 </span>
               </div>
             </div>
