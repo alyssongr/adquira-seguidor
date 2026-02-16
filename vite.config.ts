@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => {
       host: previewHost,
       port: previewPort,
       allowedHosts: [
-        "adquira-seguidor-adquira-seguidor.tvlueg.easypanel.host",
-        ".easypanel.host"
+        "adquiraseguidor.com",
+        "www.adquiraseguidor.com"
       ],
     },
 
