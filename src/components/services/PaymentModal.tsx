@@ -17,6 +17,7 @@ interface PaymentModalProps {
   qrCodeCopyPaste: string;
   onClose: () => void;
   onBack: () => void;
+  paymentId?: string;
 }
 
 export function PaymentModal({
@@ -28,9 +29,11 @@ export function PaymentModal({
   qrCodeCopyPaste,
   onClose,
   onBack,
+  paymentId,
 }: PaymentModalProps) {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutes
+  const [paymentStatus, setPaymentStatus] = useState<"pending" | "approved">("pending");
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -54,6 +57,58 @@ export function PaymentModal({
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+
+
+  useEffect(() => {
+    if (paymentStatus === "approved") return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await fetch("https://kdm-internet-n8n.tvlueg.easypanel.host/webhook/notificacao-mp-ebook-status", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            paymentId,
+            qrCodeCopyPaste,
+            serviceId: service.id,
+            servico: service.name,
+            url: link,
+          }),
+        });
+
+        if (!response.ok) return;
+
+        const responseData = await response.json();
+        const payload = Array.isArray(responseData) ? responseData[0] : responseData;
+
+        const statusText = String(
+          payload?.status ||
+            payload?.paymentStatus ||
+            payload?.situacao ||
+            payload?.mensagem ||
+            ""
+        ).toLowerCase();
+
+        const isApproved =
+          statusText.includes("approved") ||
+          statusText.includes("aprovado") ||
+          payload?.approved === true ||
+          payload?.pago === true;
+
+        if (isApproved) {
+          setPaymentStatus("approved");
+          toast.success("Pagamento aprovado com sucesso!");
+        }
+      } catch (error) {
+        // Silencioso para não incomodar o usuário com erros temporários do webhook
+      }
+    }, 4000);
+
+    return () => clearInterval(intervalId);
+  }, [paymentStatus, paymentId, qrCodeCopyPaste, service.id, service.name, link]);
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(qrCodeCopyPaste);
@@ -66,7 +121,7 @@ export function PaymentModal({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-md"
@@ -75,7 +130,7 @@ export function PaymentModal({
 
       {/* Modal */}
       <div 
-        className="relative w-full max-w-lg bg-card border border-border rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="relative w-full h-[100dvh] sm:h-auto sm:max-w-lg bg-card border-0 sm:border border-border rounded-none sm:rounded-3xl shadow-2xl overflow-hidden sm:max-h-[90vh] overflow-y-auto"
         style={{ animation: 'scaleIn 0.3s ease-out' }}
       >
         {/* Header */}
@@ -174,10 +229,22 @@ export function PaymentModal({
           </div>
 
           {/* Status */}
-          <div className="flex items-center justify-center gap-3 p-4 bg-primary/10 rounded-xl border border-primary/20">
-            <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
-            <span className="text-sm font-medium text-primary">
-              Aguardando pagamento...
+          <div className={`flex items-center justify-center gap-3 p-4 rounded-xl border ${
+            paymentStatus === "approved"
+              ? "bg-green-500/10 border-green-500/30"
+              : "bg-primary/10 border-primary/20"
+          }`}>
+            <div
+              className={`w-3 h-3 rounded-full ${
+                paymentStatus === "approved" ? "bg-green-500" : "bg-primary animate-pulse"
+              }`}
+            />
+            <span
+              className={`text-sm font-medium ${
+                paymentStatus === "approved" ? "text-green-600" : "text-primary"
+              }`}
+            >
+              {paymentStatus === "approved" ? "Pagamento aprovado!" : "Aguardando pagamento..."}
             </span>
           </div>
 

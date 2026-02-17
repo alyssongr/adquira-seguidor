@@ -35,6 +35,7 @@ interface PurchaseModalProps {
 interface PixResponse {
   qrCodeBase64: string;
   qrCodeCopyPaste: string;
+  paymentId?: string;
 }
 
 export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
@@ -96,7 +97,6 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
           servico: service.name,
           valor: totalPrice,
           serviceId: service.id,
-          packageId: selectedPackage?.packageId ?? null,
         }),
       });
 
@@ -116,6 +116,7 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
       setPixData({
         qrCodeBase64: data.qrCodeBase64,
         qrCodeCopyPaste: data.qrCodeCopyPaste || data.qrCodeBase64, // fallback if null
+        paymentId: data.paymentId || data.pagamentoId || data.id || data.externalReference,
       });
       setShowPayment(true);
     } catch (err) {
@@ -137,12 +138,13 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
         qrCodeCopyPaste={pixData.qrCodeCopyPaste}
         onClose={onClose}
         onBack={() => setShowPayment(false)}
+        paymentId={pixData.paymentId}
       />
     );
   }
 
   const modalContent = (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -152,7 +154,7 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
 
       {/* Modal */}
       <div 
-        className="relative w-full max-w-lg bg-card border border-border rounded-3xl shadow-2xl overflow-hidden"
+        className="relative w-full h-[100dvh] sm:h-auto sm:max-w-lg bg-card border-0 sm:border border-border rounded-none sm:rounded-3xl shadow-2xl overflow-y-auto"
         style={{ animation: 'scaleIn 0.3s ease-out' }}
       >
         {/* Header */}
@@ -183,7 +185,7 @@ export function PurchaseModal({ service, onClose }: PurchaseModalProps) {
             </label>
 
             {service.packageOptions ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {service.packageOptions.map((pkg, index) => {
                   const isActive = quantity === pkg.quantity;
                   const unitPrice = pkg.price / pkg.quantity;
