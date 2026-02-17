@@ -111,11 +111,7 @@ export function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`md:hidden p-2 transition-colors ${
-              isScrolled || !isHomePage
-                ? "text-foreground hover:text-primary"
-                : "text-primary-foreground hover:text-primary-foreground/80"
-            }`}
+            className="md:hidden p-2 rounded-xl bg-card/95 border border-border text-foreground shadow-md"
             aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
